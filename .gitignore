@@ -1,0 +1,16 @@
+# OS
+.DS_Store
+**/.DS_Store
+
+# Local tooling
+.claude/
+
+# Source material — not for deploy
+Zover .pdf
+Renders/
+Brandbooks/
+Content/
+Other/
+Referances/
+design and colors/
+Pictures/
