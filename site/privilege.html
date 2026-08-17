@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Zover Privilege</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#242429;--ink-soft:#2E2E34;--brand:#242429;--brand-dark:#000000;--accent:#B74C2A;--accent-dark:#8E3A20;--light:#F6EAE5;--silver:#CCCCCC;--grey:#808080;--blue:#AAC0CC;
+  --text:#242429;--text2:#5A5A61;--text3:#8A8A92;
+  --bg:#fff;--bg2:#F7F7F8;--bg3:#EDEDEF;
+  --border:rgba(0,0,0,0.11);--radius:8px;--radius-lg:12px;
+  --red:#E53935;--green:#2E7D32;--green-bg:#E8F5E9;
+  --shadow:0 4px 24px rgba(0,0,0,0.10);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#808080;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:12px}
+.app{width:100%;max-width:430px;background:var(--bg);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
+.screen{display:none}.screen.active{display:block}
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:var(--brand)}
+.nav-logo{color:#fff;font-size:15px;font-weight:600;letter-spacing:.3px}
+.nav-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.8);font-size:13px}
+.nav-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+/* HERO */
+.hero{background:var(--brand);padding:36px 20px 28px;text-align:center}
+.hero h1{color:#fff;font-size:22px;font-weight:600;margin-bottom:5px}
+.hero p{color:rgba(255,255,255,.7);font-size:13.5px}
+/* FORMS */
+.body{padding:24px 20px}
+.form-group{margin-bottom:15px}
+.form-label{font-size:13px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:3px}
+.req{color:var(--red);font-size:13px}
+.opt{color:var(--text3);font-size:11.5px;font-weight:400;margin-left:2px}
+.inp{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius);font-size:15px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--accent)}
+.inp.error{border-color:var(--red);background:#fff8f8}
+.inp.ok{border-color:#81c784}
+.inp-wrap{position:relative;display:flex;align-items:center}
+.inp-prefix{position:absolute;left:13px;font-size:15px;color:rgba(0,0,0,.35);pointer-events:none;user-select:none}
+.inp-phone{padding-left:56px}
+.inp-eye{position:absolute;right:12px;cursor:pointer;color:var(--text3);font-size:20px}
+select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.field-msg{font-size:11.5px;margin-top:4px;min-height:16px}
+.field-msg.err{color:var(--red)}.field-msg.suc{color:var(--green)}
+/* PHONE BADGE */
+.phone-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;border-radius:20px;margin-top:4px;font-weight:500}
+.phone-badge.exists{background:#E8F5E9;color:#2E7D32}
+.phone-badge.new{background:#FFF3E0;color:#E65100}
+/* BUTTONS */
+.btn{width:100%;padding:12px;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-dark)}
+.btn-primary:disabled{opacity:.45;cursor:default}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-outline:disabled{opacity:.45;cursor:default}
+.btn-outline:disabled:hover{border-color:var(--border);color:var(--text2)}
+.btn-register-highlight{background:var(--brand);color:#fff;border:none;box-shadow:0 2px 12px rgba(255,153,51,.4)}
+.btn-sm{width:auto;padding:8px 16px;font-size:13px;font-weight:500}
+.btn-danger{background:#FFEBEE;color:var(--red);border:none}
+.btn-success{background:var(--green-bg);color:var(--green);border:none}
+.btn-ghost{background:transparent;border:none;color:var(--text3);font-size:13px;padding:0;width:auto;cursor:pointer}
+.btn-ghost:hover{color:var(--accent)}
+/* LINK */
+.link{font-size:12.5px;color:var(--text3);cursor:pointer;text-align:center;display:block;margin-top:10px;text-decoration:none}
+.link:hover{color:var(--accent)}
+.link-visible{color:var(--accent)}
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.divider span{font-size:12px;color:var(--text3)}
+/* OTP */
+.otp-row{display:flex;gap:10px;justify-content:center;margin:10px 0 16px}
+.otp-box{width:52px;height:56px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:22px;font-weight:600;text-align:center;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.otp-box:focus{border-color:var(--accent)}
+.otp-box.filled{border-color:var(--accent);background:var(--light)}
+/* PASSWORD STRENGTH */
+.pw-req{margin-top:6px}
+.pw-req-item{font-size:11.5px;display:flex;align-items:center;gap:5px;padding:2px 0;color:var(--text3);transition:color .15s}
+.pw-req-item.ok{color:var(--green)}
+.pw-req-item .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px;max-height:92vh;overflow-y:auto;transform:translateY(30px);transition:transform .25s ease}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.modal-actions .btn{flex:1}
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--bg2)}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone.has-file{border-color:#81c784;background:#f9fff9}
+.upload-icon{font-size:32px;color:var(--text3);margin-bottom:8px}
+.upload-label{font-size:13.5px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.upload-sub{font-size:12px;color:var(--text3)}
+.upload-preview{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);margin-top:8px}
+.upload-preview img{width:44px;height:44px;object-fit:cover;border-radius:6px}
+.upload-preview-name{font-size:13px;font-weight:500;color:var(--text);flex:1}
+.upload-preview-size{font-size:12px;color:var(--text3)}
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* VOUCHER */
+.voucher-box{border:2px dashed var(--accent);border-radius:var(--radius-lg);padding:20px;text-align:center;margin-bottom:18px;background:var(--light)}
+.voucher-code{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--brand-dark);font-family:'Courier New',monospace}
+.voucher-meta{font-size:12px;color:var(--text3);margin-top:5px}
+/* PARTNER GRID */
+.cats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
+.cat-btn{padding:6px 13px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);color:var(--text2);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cat-btn.active{background:var(--light);border-color:var(--accent);color:var(--brand-dark)}
+.partner-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.partner-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.partner-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(255,153,51,.12)}
+.p-icon{width:42px;height:42px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:9px}
+.p-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.p-cat{font-size:11px;color:var(--text3);margin-bottom:7px}
+.p-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-bg);color:var(--green)}
+/* DETAIL */
+.detail-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--accent);cursor:pointer;margin-bottom:16px;font-weight:500}
+.detail-hero{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:14px;background:var(--bg2);border-radius:var(--radius-lg)}
+/* LIST ROWS */
+.list-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.list-row:last-child{border-bottom:none}
+.row-left{display:flex;align-items:center;gap:9px}
+.row-icon{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px}
+.row-name{font-size:14px;font-weight:500;color:var(--text)}
+.row-sub{font-size:12px;color:var(--text3)}
+/* BADGES */
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-orange{background:#FFF3E0;color:#E65100}
+.badge-red{background:#FFEBEE;color:var(--red)}
+.badge-gray{background:var(--bg3);color:var(--text3)}
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.stat-card{background:var(--bg2);border-radius:var(--radius);padding:12px;text-align:center}
+.stat-val{font-size:22px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+/* ADMIN TABS */
+.admin-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.a-tab{padding:10px 14px;font-size:13px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s}
+.a-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ADMIN TABLE */
+.res-table{width:100%;border-collapse:collapse;font-size:13px}
+.res-table th{background:var(--bg2);padding:9px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:12px;border-bottom:1px solid var(--border)}
+.res-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.res-table tr:last-child td{border-bottom:none}
+.res-table tr:hover td{background:#fafafa}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+/* BOT NAV */
+.bot-nav{display:flex;border-top:1px solid var(--border);background:var(--bg)}
+.bot-item{flex:1;padding:10px 0;text-align:center;cursor:pointer;font-size:11px;color:var(--text3);transition:color .15s}
+.bot-item i{display:block;font-size:22px;margin-bottom:2px}
+.bot-item.active,.bot-item.active i{color:var(--accent)}
+/* SWITCH */
+.switch{position:relative;width:38px;height:21px;display:inline-block}
+.switch input{opacity:0;width:0;height:0}
+.sw-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:11px;transition:.2s}
+.sw-slider:before{position:absolute;content:"";width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.sw-slider{background:var(--accent)}
+input:checked+.sw-slider:before{transform:translateX(17px)}
+/* HOW BOX */
+.how-box{margin-top:16px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius)}
+.how-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.how-text{font-size:13px;color:var(--text2);line-height:1.55}
+/* EMPTY */
+.empty-state{text-align:center;padding:36px 0;color:var(--text3);font-size:14px}
+.empty-state i{font-size:38px;display:block;margin-bottom:8px;opacity:.3}
+/* SECTION HEADER */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:600;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:16px}
+/* PROFILE CARD */
+.profile-card{background:var(--bg2);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.pro-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
+.pro-row:last-child{border-bottom:none}
+.pro-key{color:var(--text2)}
+.pro-val{color:var(--text);font-weight:500;text-align:right}
+/* LOADING */
+.loading-dots{display:inline-flex;gap:4px}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:dot .9s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.15}40%{opacity:1}}
+/* ADD PARTNER MODAL FORM */
+.form-row{margin-bottom:12px}
+.form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px}
+textarea.inp{resize:vertical;min-height:64px}
+/* ADMIN NAV */
+.admin-nav{background:#1a1a1a}
+/* SCROLL */
+.content{padding:20px 18px;overflow-y:auto;max-height:calc(100vh - 200px)}
+.content-full{padding:20px 18px}
+@media(prefers-color-scheme:dark){
+  :root{--text:#f0f0f0;--text2:#aaa;--text3:#666;--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--border:rgba(255,255,255,0.1)}
+}
+
+/* ═══════════ ZOVER.AM WEB LAYER ═══════════ */
+body{font-family:'Noto Sans Armenian',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+ background:var(--bg);display:block;padding:0;min-height:100vh}
+.app{width:100%;max-width:none;border-radius:0;box-shadow:none;background:var(--bg)}
+::selection{background:var(--accent);color:#fff}
+a,button,.cat-btn,.partner-card,.list-row{outline-offset:3px}
+:focus-visible{outline:2px solid var(--accent)}
+
+/* ── HEADER ── */
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);
+ padding:0 max(20px,calc((100% - 1180px)/2));height:68px;gap:32px;
+ border-bottom:1px solid rgba(255,255,255,.08)}
+.nav-logo-img{height:26px;width:auto;display:block;flex-shrink:0}
+.hnav{display:none;gap:26px;margin-left:auto;margin-right:26px}
+.hnav a{font-size:14px;color:rgba(255,255,255,.62);cursor:pointer;padding:24px 0;
+ border-bottom:2px solid transparent;transition:color .15s,border-color .15s;letter-spacing:.2px}
+.hnav a:hover{color:#fff}
+.hnav a.active{color:#fff;border-bottom-color:var(--accent)}
+@media(min-width:860px){.hnav{display:flex}}
+.nav-user{gap:10px}
+.nav-avatar{background:var(--accent);color:#fff;font-weight:600}
+.admin-nav{background:#000}
+
+/* ── LOGIN: FULL-BLEED COVER ── */
+#s-login.active{display:flex;flex-direction:column;justify-content:center;align-items:center;
+ min-height:100vh;position:relative;padding:48px 20px;
+ background:url('https://www.zover.am/assets/zard/zard-02.jpg') center/cover no-repeat #242429}
+#s-login::before{content:'';position:absolute;inset:0;
+ background:linear-gradient(180deg,rgba(36,36,41,.72) 0%,rgba(36,36,41,.88) 100%)}
+#s-login>*{position:relative;z-index:1;width:100%;max-width:420px}
+#s-login .hero{background:transparent;padding:0 0 26px;text-align:left}
+.hero-logo{height:34px;margin-bottom:26px}
+.hero-eyebrow{display:inline-block;font-size:11px;letter-spacing:3px;text-transform:uppercase;
+ color:var(--accent);font-weight:600;margin-bottom:10px;
+ padding-left:14px;position:relative}
+.hero-eyebrow::before{content:'';position:absolute;left:0;top:50%;width:8px;height:1px;background:var(--accent)}
+#s-login .hero h1{font-size:29px;line-height:1.25;font-weight:600;letter-spacing:-.3px;margin-bottom:8px}
+#s-login .hero p{font-size:14px;color:rgba(255,255,255,.62);line-height:1.55}
+#s-login .body{background:#fff;border-radius:var(--radius-lg);padding:26px 24px 24px}
+
+/* ── HOME COVER STRIP ── */
+.cover{position:relative;min-height:280px;display:flex;align-items:flex-end;
+ background:url('https://www.zover.am/assets/zard/zard-04.jpg') center 40%/cover no-repeat #242429}
+.cover::before{content:'';position:absolute;inset:0;
+ background:linear-gradient(180deg,rgba(36,36,41,.35) 0%,rgba(36,36,41,.9) 100%)}
+.cover-inner{position:relative;width:100%;max-width:1180px;margin:0 auto;padding:0 max(20px,0px) 34px;
+ padding-left:max(20px,calc((100vw - 1180px)/2));padding-right:max(20px,calc((100vw - 1180px)/2))}
+.cover-inner h2{color:#fff;font-size:32px;font-weight:600;letter-spacing:-.4px;line-height:1.2}
+.cover-inner p{color:rgba(255,255,255,.66);font-size:14.5px;margin-top:7px}
+@media(min-width:860px){.cover{min-height:340px}.cover-inner h2{font-size:42px}}
+
+/* ── CONTENT SHELL ── */
+.content,.content-full{max-height:none;overflow:visible;
+ max-width:1180px;margin:0 auto;padding:34px max(20px,24px) 96px}
+.section-title{font-size:20px;letter-spacing:-.2px}
+.page-sub{font-size:14px;margin-bottom:22px}
+
+/* ── PARTNER GRID ── */
+.partner-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.partner-card{padding:18px;background:var(--bg);transition:border-color .18s,transform .18s,box-shadow .18s}
+.partner-card:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 8px 26px rgba(36,36,41,.10)}
+.p-icon{width:48px;height:48px;margin-bottom:12px}
+.p-name{font-size:15px}
+.p-badge{background:var(--light);color:var(--accent-dark);font-weight:600}
+.cats{margin-bottom:20px}
+.cat-btn{border-radius:4px;padding:7px 15px}
+.cat-btn.active{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* ── BUTTONS: ink primary, terracotta on hover ── */
+.btn{border-radius:6px;letter-spacing:.2px}
+.btn-primary{background:var(--ink)}
+.btn-primary:hover{background:var(--accent)}
+.btn-register-highlight{background:var(--accent);box-shadow:0 2px 14px rgba(183,76,42,.30)}
+.btn-register-highlight:hover{background:var(--accent-dark)}
+.btn-outline{border-color:rgba(36,36,41,.18)}
+.btn-outline:hover{border-color:var(--ink);color:var(--ink)}
+.link:hover,.btn-ghost:hover{color:var(--accent)}
+.detail-back{color:var(--text2)}
+.detail-back:hover{color:var(--accent)}
+
+/* ── DETAIL / VOUCHER ── */
+#s-detail .content,#s-voucher .content,#s-myvouchers .content,#s-profile .content{max-width:720px}
+.detail-hero{padding:20px;gap:18px}
+#d-discount{color:var(--accent)!important}
+.voucher-box{border-color:var(--accent);background:var(--light)}
+.voucher-code{color:var(--ink)}
+.how-box{border-left:2px solid var(--accent)}
+
+/* ── STATUS / TABLES ── */
+.stat-val{letter-spacing:-.5px}
+.a-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+.res-table th{background:var(--ink);color:#fff;font-weight:500}
+.upload-zone:hover,.inp:focus{border-color:var(--accent)}
+
+/* ── BOTTOM NAV: mobile only ── */
+.bot-nav{position:sticky;bottom:0;z-index:90}
+@media(min-width:860px){.bot-nav{display:none}}
+
+/* ── MODALS on desktop ── */
+@media(min-width:640px){
+ .modal-overlay{align-items:center}
+ .modal{border-radius:var(--radius-lg);max-width:520px;padding:28px;max-height:88vh}
+}
+
+/* ── ADMIN TRIGGER ── */
+#admin-trigger{background:var(--ink);color:rgba(255,255,255,.4);border:none;padding:22px}
+
+
+/* ── LOGO (vector, from brand file) ── */
+.nav-logo-img{height:24px;width:81px;color:#fff;display:block;flex-shrink:0}
+.hero-logo{height:32px;width:108px;color:#fff;display:block;margin-bottom:26px}
+.admin-nav .nav-logo{color:#fff}
+
+/* ── ICON-FREE UI ── */
+.inp-eye{font-size:12px;font-weight:500;color:var(--accent);user-select:none;right:13px}
+.inp-eye:hover{color:var(--accent-dark)}
+.detail-back::before{content:'\2190';margin-right:6px}
+.bot-item{padding:14px 0;font-size:12.5px;font-weight:500}
+.bot-item i,.empty-state i{display:none}
+.empty-state{padding:48px 16px}
+.p-badge,.badge{letter-spacing:.1px}
+
+
+/* ── voucher partner logo ── */
+.v-logo{width:64px;height:64px;border-radius:var(--radius);margin:0 auto 12px;
+ display:flex;align-items:center;justify-content:center;font-size:28px;padding:8px;box-sizing:border-box}
+.v-logo img{width:100%;height:100%;object-fit:contain}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><symbol id="zover-logo" viewBox="0 0 120.256 35.5871"><path fill-rule="nonzero" fill="currentColor" fill-opacity="1" d="M 41.070312 27.328125 C 40.796875 27.328125 40.542969 27.277344 40.304688 27.179688 C 40.070312 27.082031 39.863281 26.941406 39.683594 26.765625 C 39.503906 26.589844 39.367188 26.382812 39.265625 26.148438 C 39.167969 25.914062 39.121094 25.660156 39.121094 25.386719 C 39.121094 25.113281 39.167969 24.863281 39.265625 24.628906 C 39.367188 24.390625 39.503906 24.1875 39.683594 24.007812 C 39.863281 23.832031 40.070312 23.691406 40.304688 23.59375 C 40.542969 23.496094 40.796875 23.445312 41.070312 23.445312 C 41.265625 23.445312 41.457031 23.472656 41.636719 23.519531 C 41.816406 23.570312 41.984375 23.636719 42.140625 23.730469 C 42.296875 23.820312 42.4375 23.933594 42.558594 24.066406 L 42.285156 24.355469 C 42.136719 24.1875 41.957031 24.058594 41.742188 23.964844 C 41.527344 23.875 41.304688 23.828125 41.070312 23.828125 C 40.851562 23.828125 40.648438 23.867188 40.460938 23.945312 C 40.277344 24.027344 40.113281 24.136719 39.976562 24.277344 C 39.839844 24.417969 39.730469 24.582031 39.652344 24.773438 C 39.578125 24.960938 39.539062 25.164062 39.539062 25.386719 C 39.539062 25.605469 39.578125 25.808594 39.652344 26 C 39.730469 26.1875 39.839844 26.355469 39.976562 26.496094 C 40.117188 26.636719 40.28125 26.75 40.46875 26.828125 C 40.660156 26.90625 40.863281 26.945312 41.082031 26.945312 C 41.3125 26.945312 41.535156 26.898438 41.746094 26.808594 C 41.957031 26.71875 42.136719 26.589844 42.277344 26.429688 L 42.546875 26.710938 C 42.421875 26.835938 42.28125 26.949219 42.125 27.042969 C 41.96875 27.136719 41.800781 27.207031 41.625 27.253906 C 41.445312 27.304688 41.257812 27.328125 41.070312 27.328125 M 47.535156 27.328125 C 47.273438 27.328125 47.023438 27.277344 46.789062 27.179688 C 46.554688 27.082031 46.347656 26.941406 46.167969 26.765625 C 45.992188 26.589844 45.855469 26.382812 45.753906 26.148438 C 45.65625 25.914062 45.609375 25.660156 45.609375 25.386719 C 45.609375 25.113281 45.65625 24.863281 45.753906 24.628906 C 45.847656 24.390625 45.988281 24.1875 46.167969 24.007812 C 46.34375 23.832031 46.554688 23.691406 46.789062 23.59375 C 47.023438 23.496094 47.273438 23.445312 47.535156 23.445312 C 47.804688 23.445312 48.054688 23.496094 48.292969 23.59375 C 48.527344 23.691406 48.734375 23.832031 48.910156 24.007812 C 49.085938 24.1875 49.226562 24.390625 49.324219 24.628906 C 49.421875 24.863281 49.472656 25.113281 49.472656 25.386719 C 49.472656 25.660156 49.421875 25.914062 49.324219 26.148438 C 49.230469 26.382812 49.089844 26.589844 48.914062 26.765625 C 48.734375 26.941406 48.527344 27.082031 48.292969 27.179688 C 48.054688 27.277344 47.804688 27.328125 47.535156 27.328125 M 47.542969 26.945312 C 47.757812 26.945312 47.957031 26.90625 48.136719 26.828125 C 48.320312 26.75 48.480469 26.640625 48.621094 26.5 C 48.757812 26.359375 48.867188 26.195312 48.945312 26.003906 C 49.023438 25.816406 49.0625 25.609375 49.058594 25.386719 C 49.058594 25.164062 49.019531 24.960938 48.941406 24.773438 C 48.863281 24.582031 48.757812 24.417969 48.621094 24.277344 C 48.480469 24.136719 48.320312 24.027344 48.136719 23.945312 C 47.957031 23.867188 47.753906 23.828125 47.535156 23.824219 C 47.324219 23.828125 47.128906 23.867188 46.941406 23.945312 C 46.757812 24.027344 46.597656 24.136719 46.460938 24.277344 C 46.320312 24.417969 46.214844 24.582031 46.136719 24.773438 C 46.058594 24.960938 46.019531 25.164062 46.015625 25.386719 C 46.019531 25.605469 46.058594 25.808594 46.136719 26.003906 C 46.214844 26.195312 46.320312 26.359375 46.460938 26.5 C 46.597656 26.640625 46.757812 26.75 46.941406 26.828125 C 47.128906 26.910156 47.328125 26.949219 47.542969 26.945312 M 52.8125 27.265625 L 52.8125 23.507812 L 53.222656 23.507812 L 55.488281 26.558594 L 55.488281 23.507812 L 55.878906 23.507812 L 55.878906 27.265625 L 55.515625 27.265625 L 53.203125 24.136719 L 53.203125 27.265625 Z M 60.609375 27.320312 C 60.3125 27.320312 60.027344 27.261719 59.757812 27.140625 C 59.484375 27.019531 59.242188 26.847656 59.035156 26.621094 L 59.308594 26.339844 C 59.503906 26.546875 59.710938 26.703125 59.929688 26.804688 C 60.152344 26.910156 60.382812 26.960938 60.625 26.960938 C 60.824219 26.960938 61 26.929688 61.152344 26.867188 C 61.304688 26.804688 61.421875 26.71875 61.507812 26.605469 C 61.59375 26.492188 61.636719 26.363281 61.636719 26.21875 C 61.636719 26.027344 61.570312 25.878906 61.433594 25.773438 C 61.300781 25.671875 61.082031 25.59375 60.773438 25.542969 L 60.230469 25.457031 C 59.867188 25.394531 59.601562 25.289062 59.429688 25.132812 C 59.257812 24.980469 59.171875 24.769531 59.171875 24.503906 C 59.171875 24.296875 59.226562 24.113281 59.335938 23.957031 C 59.449219 23.800781 59.605469 23.675781 59.800781 23.589844 C 60 23.5 60.230469 23.457031 60.492188 23.457031 C 60.757812 23.457031 61.019531 23.5 61.273438 23.585938 C 61.53125 23.671875 61.765625 23.796875 61.976562 23.957031 L 61.738281 24.28125 C 61.328125 23.96875 60.90625 23.8125 60.476562 23.8125 C 60.296875 23.8125 60.140625 23.839844 60.003906 23.894531 C 59.867188 23.949219 59.761719 24.027344 59.6875 24.128906 C 59.613281 24.226562 59.574219 24.339844 59.574219 24.472656 C 59.574219 24.648438 59.632812 24.785156 59.75 24.875 C 59.871094 24.96875 60.0625 25.039062 60.335938 25.082031 L 60.875 25.167969 C 61.285156 25.234375 61.585938 25.351562 61.769531 25.511719 C 61.957031 25.675781 62.050781 25.90625 62.050781 26.199219 C 62.050781 26.417969 61.988281 26.609375 61.867188 26.78125 C 61.746094 26.953125 61.578125 27.085938 61.359375 27.179688 C 61.144531 27.273438 60.894531 27.320312 60.609375 27.320312 M 66.261719 27.265625 L 66.257812 23.875 L 64.894531 23.871094 L 64.894531 23.507812 L 68.023438 23.507812 L 68.027344 23.875 L 66.664062 23.871094 L 66.667969 27.265625 Z M 71.21875 27.265625 L 71.21875 23.507812 L 72.832031 23.507812 C 73.078125 23.507812 73.292969 23.550781 73.476562 23.640625 C 73.660156 23.730469 73.800781 23.855469 73.902344 24.015625 C 74.003906 24.175781 74.054688 24.367188 74.054688 24.585938 C 74.054688 24.832031 73.984375 25.046875 73.839844 25.222656 C 73.691406 25.398438 73.5 25.523438 73.253906 25.597656 L 74.097656 27.265625 L 73.640625 27.265625 L 72.835938 25.648438 L 71.632812 25.648438 L 71.632812 27.265625 Z M 71.632812 25.300781 L 72.804688 25.300781 C 73.058594 25.300781 73.261719 25.234375 73.414062 25.109375 C 73.566406 24.980469 73.640625 24.804688 73.640625 24.585938 C 73.640625 24.371094 73.566406 24.199219 73.414062 24.070312 C 73.261719 23.941406 73.058594 23.875 72.804688 23.875 L 71.632812 23.875 Z M 78.847656 27.328125 C 78.527344 27.328125 78.25 27.257812 78.019531 27.125 C 77.785156 26.992188 77.605469 26.800781 77.480469 26.554688 C 77.355469 26.304688 77.292969 26.015625 77.292969 25.675781 L 77.292969 23.507812 L 77.707031 23.507812 L 77.707031 25.675781 C 77.707031 25.933594 77.753906 26.160156 77.847656 26.347656 C 77.941406 26.539062 78.074219 26.683594 78.246094 26.789062 C 78.417969 26.894531 78.617188 26.945312 78.847656 26.945312 C 79.078125 26.945312 79.28125 26.894531 79.453125 26.789062 C 79.621094 26.683594 79.753906 26.539062 79.847656 26.347656 C 79.9375 26.160156 79.984375 25.933594 79.984375 25.675781 L 79.984375 23.507812 L 80.398438 23.507812 L 80.398438 25.675781 C 80.398438 26.015625 80.335938 26.304688 80.207031 26.554688 C 80.082031 26.800781 79.902344 26.992188 79.671875 27.125 C 79.441406 27.257812 79.164062 27.328125 78.847656 27.328125 M 85.609375 27.328125 C 85.335938 27.328125 85.082031 27.277344 84.847656 27.179688 C 84.609375 27.082031 84.402344 26.941406 84.222656 26.765625 C 84.042969 26.589844 83.90625 26.382812 83.808594 26.148438 C 83.707031 25.914062 83.660156 25.660156 83.660156 25.386719 C 83.660156 25.113281 83.707031 24.863281 83.808594 24.628906 C 83.90625 24.390625 84.042969 24.1875 84.222656 24.007812 C 84.402344 23.832031 84.609375 23.691406 84.847656 23.59375 C 85.082031 23.496094 85.335938 23.445312 85.609375 23.445312 C 85.804688 23.445312 85.996094 23.472656 86.175781 23.519531 C 86.355469 23.570312 86.523438 23.636719 86.679688 23.730469 C 86.835938 23.820312 86.976562 23.933594 87.097656 24.066406 L 86.824219 24.355469 C 86.675781 24.1875 86.496094 24.058594 86.28125 23.964844 C 86.066406 23.875 85.84375 23.828125 85.609375 23.828125 C 85.390625 23.828125 85.1875 23.867188 85 23.945312 C 84.816406 24.027344 84.652344 24.136719 84.515625 24.277344 C 84.378906 24.417969 84.269531 24.582031 84.191406 24.773438 C 84.117188 24.960938 84.078125 25.164062 84.078125 25.386719 C 84.078125 25.605469 84.117188 25.808594 84.191406 26 C 84.269531 26.1875 84.378906 26.355469 84.519531 26.496094 C 84.65625 26.636719 84.820312 26.75 85.011719 26.828125 C 85.199219 26.90625 85.402344 26.945312 85.621094 26.945312 C 85.851562 26.945312 86.074219 26.898438 86.285156 26.808594 C 86.496094 26.71875 86.675781 26.589844 86.820312 26.429688 L 87.085938 26.710938 C 86.960938 26.835938 86.820312 26.949219 86.664062 27.042969 C 86.507812 27.136719 86.34375 27.207031 86.164062 27.253906 C 85.984375 27.304688 85.800781 27.328125 85.609375 27.328125 M 91.496094 27.265625 L 91.492188 23.875 L 90.132812 23.871094 L 90.132812 23.507812 L 93.257812 23.507812 L 93.265625 23.875 L 91.898438 23.871094 L 91.90625 27.265625 Z M 96.453125 23.507812 L 96.867188 23.507812 L 96.867188 27.265625 L 96.453125 27.265625 Z M 102.136719 27.328125 C 101.871094 27.328125 101.621094 27.277344 101.386719 27.179688 C 101.152344 27.082031 100.945312 26.941406 100.769531 26.765625 C 100.589844 26.589844 100.453125 26.382812 100.355469 26.148438 C 100.257812 25.914062 100.207031 25.660156 100.207031 25.386719 C 100.207031 25.113281 100.253906 24.863281 100.351562 24.628906 C 100.449219 24.390625 100.585938 24.1875 100.765625 24.007812 C 100.945312 23.832031 101.152344 23.691406 101.386719 23.59375 C 101.621094 23.496094 101.871094 23.445312 102.136719 23.445312 C 102.40625 23.445312 102.65625 23.496094 102.890625 23.59375 C 103.125 23.691406 103.332031 23.832031 103.507812 24.007812 C 103.6875 24.1875 103.824219 24.390625 103.921875 24.628906 C 104.019531 24.863281 104.070312 25.113281 104.070312 25.386719 C 104.070312 25.660156 104.023438 25.914062 103.925781 26.148438 C 103.828125 26.382812 103.691406 26.589844 103.511719 26.765625 C 103.332031 26.941406 103.125 27.082031 102.890625 27.179688 C 102.65625 27.277344 102.40625 27.328125 102.136719 27.328125 M 102.140625 26.945312 C 102.355469 26.945312 102.554688 26.90625 102.738281 26.828125 C 102.921875 26.75 103.082031 26.640625 103.21875 26.5 C 103.355469 26.359375 103.464844 26.195312 103.542969 26.003906 C 103.621094 25.816406 103.660156 25.609375 103.65625 25.386719 C 103.65625 25.164062 103.617188 24.960938 103.539062 24.773438 C 103.464844 24.582031 103.355469 24.417969 103.21875 24.277344 C 103.082031 24.136719 102.921875 24.027344 102.738281 23.945312 C 102.554688 23.867188 102.355469 23.828125 102.136719 23.824219 C 101.925781 23.828125 101.726562 23.867188 101.542969 23.945312 C 101.359375 24.027344 101.195312 24.136719 101.058594 24.277344 C 100.921875 24.417969 100.8125 24.582031 100.738281 24.773438 C 100.660156 24.960938 100.617188 25.164062 100.613281 25.386719 C 100.617188 25.605469 100.660156 25.808594 100.738281 26.003906 C 100.8125 26.195312 100.921875 26.359375 101.058594 26.5 C 101.195312 26.640625 101.359375 26.75 101.542969 26.828125 C 101.726562 26.910156 101.925781 26.949219 102.140625 26.945312 M 107.410156 27.265625 L 107.410156 23.507812 L 107.824219 23.507812 L 110.085938 26.558594 L 110.085938 23.507812 L 110.476562 23.507812 L 110.476562 27.265625 L 110.113281 27.265625 L 107.800781 24.136719 L 107.800781 27.265625 Z M 107.410156 27.265625 "/><path fill-rule="nonzero" fill="currentColor" fill-opacity="1" d="M 108.371094 20.347656 L 103.855469 14.777344 L 102.171875 14.777344 L 102.171875 20.347656 L 100.851562 20.347656 L 100.851562 9.066406 L 102.171875 10.433594 L 102.171875 13.65625 L 105.316406 13.65625 C 106.136719 13.65625 106.761719 13.449219 107.195312 13.035156 C 107.628906 12.617188 107.847656 12.0625 107.847656 11.363281 C 107.847656 10.6875 107.628906 10.136719 107.195312 9.707031 C 106.761719 9.28125 106.136719 9.066406 105.316406 9.066406 L 100.851562 9.066406 L 100.851562 7.910156 L 105.316406 7.910156 C 106.125 7.910156 106.816406 8.058594 107.394531 8.351562 C 107.972656 8.648438 108.417969 9.054688 108.722656 9.574219 C 109.03125 10.089844 109.183594 10.679688 109.183594 11.34375 C 109.183594 12.03125 109.03125 12.632812 108.722656 13.152344 C 108.417969 13.667969 107.972656 14.070312 107.394531 14.355469 C 106.855469 14.617188 106.21875 14.757812 105.480469 14.777344 L 110.070312 20.347656 Z M 38.746094 19.460938 L 45.789062 9.121094 L 39.089844 9.121094 L 39.089844 7.910156 L 47.585938 7.910156 L 47.585938 8.796875 L 40.539062 19.136719 L 47.441406 19.136719 L 47.441406 20.347656 L 38.746094 20.347656 Z M 58.84375 19.242188 C 59.785156 19.242188 60.621094 19.019531 61.347656 18.574219 C 62.078125 18.128906 62.648438 17.519531 63.066406 16.75 C 63.480469 15.976562 63.6875 15.097656 63.6875 14.109375 C 63.6875 13.375 63.570312 12.695312 63.328125 12.078125 C 63.085938 11.457031 62.75 10.914062 62.316406 10.449219 C 61.882812 9.984375 61.371094 9.625 60.789062 9.375 C 60.203125 9.121094 59.554688 8.996094 58.84375 8.996094 C 57.917969 8.996094 57.089844 9.214844 56.359375 9.65625 C 55.628906 10.09375 55.058594 10.699219 54.640625 11.472656 C 54.226562 12.242188 54.019531 13.121094 54.019531 14.109375 C 54.019531 14.84375 54.140625 15.527344 54.378906 16.152344 C 54.621094 16.78125 54.957031 17.324219 55.390625 17.789062 C 55.828125 18.253906 56.339844 18.609375 56.929688 18.863281 C 57.519531 19.117188 58.15625 19.242188 58.84375 19.242188 M 58.882812 20.527344 C 58 20.527344 57.183594 20.359375 56.429688 20.03125 C 55.679688 19.699219 55.019531 19.242188 54.453125 18.65625 C 53.886719 18.070312 53.441406 17.390625 53.125 16.613281 C 52.804688 15.835938 52.644531 15 52.644531 14.109375 C 52.644531 13.207031 52.800781 12.367188 53.113281 11.597656 C 53.429688 10.824219 53.867188 10.152344 54.433594 9.574219 C 55 8.996094 55.65625 8.542969 56.40625 8.21875 C 57.152344 7.890625 57.964844 7.730469 58.84375 7.730469 C 59.722656 7.730469 60.539062 7.890625 61.292969 8.21875 C 62.046875 8.542969 62.707031 8.996094 63.273438 9.574219 C 63.839844 10.152344 64.28125 10.828125 64.59375 11.605469 C 64.90625 12.382812 65.0625 13.222656 65.0625 14.128906 C 65.0625 15.019531 64.90625 15.855469 64.59375 16.632812 C 64.28125 17.410156 63.84375 18.085938 63.28125 18.664062 C 62.722656 19.242188 62.066406 19.699219 61.320312 20.03125 C 60.574219 20.359375 59.761719 20.527344 58.882812 20.527344 M 74.585938 20.347656 L 69.636719 7.910156 L 71.082031 7.910156 L 75.105469 18.214844 L 79.160156 7.910156 L 80.570312 7.910156 L 75.582031 20.347656 Z M 86.515625 20.347656 L 86.515625 9.121094 L 87.835938 10.488281 L 87.835938 13.386719 L 94.109375 13.40625 L 94.128906 14.5625 L 87.835938 14.5625 L 87.835938 19.136719 L 94.6875 19.136719 L 94.707031 20.347656 Z M 86.515625 9.121094 L 86.515625 7.910156 L 94.597656 7.910156 L 94.597656 9.121094 Z M 86.515625 9.121094 "/><path fill-rule="nonzero" fill="currentColor" fill-opacity="1" d="M 113.359375 10.773438 L 113.355469 8.03125 L 112.253906 8.023438 L 112.253906 7.730469 L 114.785156 7.730469 L 114.789062 8.03125 L 113.683594 8.023438 L 113.6875 10.773438 Z M 115.195312 10.773438 L 115.195312 7.730469 L 115.667969 7.730469 L 116.707031 9.890625 L 117.742188 7.730469 L 118.210938 7.730469 L 118.210938 10.773438 L 117.894531 10.773438 L 117.894531 8.113281 L 116.699219 10.554688 L 115.507812 8.117188 L 115.507812 10.773438 Z M 115.195312 10.773438 "/><path fill-rule="evenodd" fill="currentColor" fill-opacity="1" d="M 1.308594 6.523438 L 18.253906 16.304688 L 28.976562 0.988281 L 1.308594 0.988281 Z M 28.980469 28.65625 L 12.035156 18.875 L 1.308594 34.191406 L 28.980469 34.191406 Z M 28.980469 28.65625 "/></symbol></svg>
+
+<div class="app" id="app">
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 1: LOGIN
+═══════════════════════════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="hero">
+    <svg class="hero-logo" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg>
+<div class="hero-eyebrow">Privilege</div>
+<h1>Բնակիչների արտոնությունների ծրագիր</h1>
+<p>Մուտք գործեք՝ ձեր անձնական զեղչային կոդերը ստանալու համար</p>
+  </div>
+  <div class="body">
+    <div class="form-group">
+      <label class="form-label"><span class="req">*</span> Հեռախոսահամար</label>
+      <div class="inp-wrap">
+        <span class="inp-prefix">+374</span>
+        <input class="inp inp-phone" type="tel" id="login-phone" placeholder="XX XXX XXX" maxlength="11" oninput="onLoginPhone(this)">
+      </div>
+      <div class="field-msg" id="login-phone-msg"></div>
+      <div id="login-phone-badge"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="req">*</span> Գաղտնաբառ</label>
+      <div class="inp-wrap">
+        <input class="inp" type="password" id="login-pass" placeholder="••••••••" style="padding-right:42px">
+        <span class="inp-eye" onclick="togglePass('login-pass',this)">Ցույց տալ</span>
+      </div>
+      <div class="field-msg" id="login-pass-msg"></div>
+    </div>
+    <a class="link" id="forgot-link" onclick="openForgot()">Մոռացել եմ գաղտնաբառը</a>
+    <div style="height:14px"></div>
+    <button class="btn btn-primary" onclick="doLogin()">
+      Մուտք
+    </button>
+    <div class="divider"><span>կամ</span></div>
+    <button class="btn btn-outline" id="register-btn" onclick="openRegister()">
+      Գրանցվել
+    </button>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: HOME (PARTNER CATALOG)
+═══════════════════════════════════════════════════════ -->
+<div id="s-home" class="screen">
+  <div class="nav">
+    <svg class="nav-logo-img" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg><nav class="hnav"><a data-nav="home" class="active" onclick="goHome()">Գործընկերներ</a><a data-nav="vouchers" onclick="goMyVouchers()">Կտրոններ</a><a data-nav="profile" onclick="goProfile()">Պրոֆիլ</a></nav>
+    <div class="nav-user">
+      <span id="nav-name"></span>
+      <div class="nav-avatar" id="nav-avatar"></div>
+    </div>
+  </div>
+  <div class="cover"><div class="cover-inner"><div class="hero-eyebrow">Privilege</div><h2>Ձեր տան արտոնությունները</h2><p>Գործընկերային զեղչեր՝ միայն Zover-ի բնակիչների համար</p></div></div>
+<div class="content">
+    <div class="section-title" style="margin-bottom:4px">Գործընկերներ</div>
+    <div class="page-sub">Ձեր հատուկ առաջարկները</div>
+    <div class="cats">
+      <button class="cat-btn active" onclick="filterCat(this,'all')">Բոլորը</button>
+      <button class="cat-btn" onclick="filterCat(this,'tech')">Տեխնիկա</button>
+      <button class="cat-btn" onclick="filterCat(this,'design')">Դիզայն</button>
+      <button class="cat-btn" onclick="filterCat(this,'material')">Շինանյութ</button>
+      <button class="cat-btn" onclick="filterCat(this,'furniture')">Կահույք</button>
+    </div>
+    <div class="partner-grid" id="partner-grid"></div>
+  </div>
+  <div class="bot-nav">
+    <div class="bot-item active" id="bn-home" onclick="goHome()">Գործընկեր</div>
+    <div class="bot-item" id="bn-vouchers" onclick="goMyVouchers()">Կտրոններ</div>
+    <div class="bot-item" id="bn-profile" onclick="goProfile()">Պրոֆիլ</div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: DETAIL
+═══════════════════════════════════════════════════════ -->
+<div id="s-detail" class="screen">
+  <div class="nav"><svg class="nav-logo-img" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg><nav class="hnav"><a data-nav="home" class="active" onclick="goHome()">Գործընկերներ</a><a data-nav="vouchers" onclick="goMyVouchers()">Կտրոններ</a><a data-nav="profile" onclick="goProfile()">Պրոֆիլ</a></nav><div class="nav-avatar" id="d-av"></div></div>
+  <div class="content">
+    <div class="detail-back" onclick="goHome()">Հետ</div>
+    <div class="detail-hero">
+      <div class="p-icon" id="d-icon"></div>
+      <div>
+        <div style="font-size:17px;font-weight:600;color:var(--text)" id="d-name"></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="d-cat"></div>
+        <div style="font-size:19px;font-weight:600;color:var(--green);margin-top:4px" id="d-discount"></div>
+      </div>
+    </div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:14px" id="d-desc"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:18px" id="d-terms"></div>
+    <button class="btn btn-primary" id="get-voucher-btn"></button>
+    <div class="how-box"><div class="how-title">Ինչպես օգտագործել</div><div class="how-text" id="d-how"></div></div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: VOUCHER
+═══════════════════════════════════════════════════════ -->
+<div id="s-voucher" class="screen">
+  <div class="nav"><svg class="nav-logo-img" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg><nav class="hnav"><a data-nav="home" class="active" onclick="goHome()">Գործընկերներ</a><a data-nav="vouchers" onclick="goMyVouchers()">Կտրոններ</a><a data-nav="profile" onclick="goProfile()">Պրոֆիլ</a></nav><div class="nav-avatar" id="v-av"></div></div>
+  <div class="content">
+    <div class="detail-back" onclick="showScreen('s-detail')">Հետ</div>
+    <div style="text-align:center;margin-bottom:18px">
+      <div id="v-logo" class="v-logo"></div>
+      <div style="font-size:17px;font-weight:600;color:var(--text)">Ձեր պրոմո կոդը պատրաստ է</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:3px" id="v-partner-name"></div>
+    </div>
+    <div class="voucher-box">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:5px">Ձեր անձնական կոդը</div>
+      <div class="voucher-code" id="v-code"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:10px" onclick="copyCode(this)">Պատճենել</button>
+    <button class="btn btn-outline" onclick="goMyVouchers()">Իմ բոլոր կտրոնները</button>
+    <div class="how-box" style="margin-top:14px"><div class="how-title">Ինչպես օգտագործել</div><div class="how-text" id="v-how"></div></div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: MY VOUCHERS
+═══════════════════════════════════════════════════════ -->
+<div id="s-myvouchers" class="screen">
+  <div class="nav"><svg class="nav-logo-img" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg><nav class="hnav"><a data-nav="home" class="active" onclick="goHome()">Գործընկերներ</a><a data-nav="vouchers" onclick="goMyVouchers()">Կտրոններ</a><a data-nav="profile" onclick="goProfile()">Պրոֆիլ</a></nav><div class="nav-avatar" id="mv-av"></div></div>
+  <div class="content">
+    <div class="section-title" style="margin-bottom:4px">Իմ Կտրոնները</div>
+    <div class="page-sub">Ձեր ակտիվ պրոմո կոդերը</div>
+    <div id="my-vouchers-list"></div>
+  </div>
+  <div class="bot-nav">
+    <div class="bot-item" onclick="goHome()">Գործընկեր</div>
+    <div class="bot-item active">Կտրոններ</div>
+    <div class="bot-item" onclick="goProfile()">Պրոֆիլ</div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: PROFILE
+═══════════════════════════════════════════════════════ -->
+<div id="s-profile" class="screen">
+  <div class="nav"><svg class="nav-logo-img" role="img" aria-label="Zover Estates"><use href="#zover-logo"></use></svg><nav class="hnav"><a data-nav="home" class="active" onclick="goHome()">Գործընկերներ</a><a data-nav="vouchers" onclick="goMyVouchers()">Կտրոններ</a><a data-nav="profile" onclick="goProfile()">Պրոֆիլ</a></nav><div class="nav-avatar" id="pr-av"></div></div>
+  <div class="content">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="width:62px;height:62px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--brand-dark);margin:0 auto 9px" id="pr-avatar-big"></div>
+      <div style="font-size:17px;font-weight:600;color:var(--text)" id="pr-fullname"></div>
+      <div style="font-size:12px;color:var(--text3)" id="pr-district-disp"></div>
+    </div>
+    <div class="profile-card">
+      <div class="pro-row"><span class="pro-key">Հեռախոս</span><span class="pro-val" id="pr-phone-disp"></span></div>
+      <div class="pro-row"><span class="pro-key">Թաղամաս</span><span class="pro-val" id="pr-dist-val"></span></div>
+      <div class="pro-row"><span class="pro-key">Մասնաշենք</span><span class="pro-val" id="pr-building-val"></span></div>
+      <div class="pro-row"><span class="pro-key">Բնակարան</span><span class="pro-val" id="pr-apt-val"></span></div>
+      <div class="pro-row" style="border:none"><span class="pro-key">Կտրոններ</span><span class="pro-val" id="pr-vc"></span></div>
+    </div>
+    <button class="btn btn-outline" onclick="doLogout()">Ելք</button>
+  </div>
+  <div class="bot-nav">
+    <div class="bot-item" onclick="goHome()">Գործընկեր</div>
+    <div class="bot-item" onclick="goMyVouchers()">Կտրոններ</div>
+    <div class="bot-item active">Պրոֆիլ</div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: ADMIN LOGIN
+═══════════════════════════════════════════════════════ -->
+<div id="s-admin-login" class="screen">
+  <div class="hero admin-nav"><h1 style="color:#fff">Կառավարում</h1><p style="color:rgba(255,255,255,.5)">Zover Estates կառավարում</p></div>
+  <div class="body">
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="inp" type="email" id="adm-email" placeholder="admin@zover.am">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Գաղտնաբառ</label>
+      <input class="inp" type="password" id="adm-pass" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" style="background:#1a1a1a" onclick="adminLogin()">Մուտք</button>
+    <p style="text-align:center;margin-top:12px"><span class="btn-ghost" onclick="showScreen('s-login')">← Բնակչի էջ</span></p>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: ADMIN PANEL
+═══════════════════════════════════════════════════════ -->
+<div id="s-admin" class="screen">
+  <div class="nav admin-nav">
+    <span class="nav-logo">Admin</span>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span style="font-size:12px;color:rgba(255,255,255,.7);cursor:pointer" onclick="showAdminPartnersScreen()">Գործընկերներ</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.5);cursor:pointer" onclick="goHome()">Բնակչի էջ →</span>
+    </div>
+  </div>
+  <div class="content-full">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" id="a-residents">0</div><div class="stat-lbl">Բնակիչ</div></div>
+      <div class="stat-card"><div class="stat-val" id="a-vouchers">0</div><div class="stat-lbl">Կտրոններ</div></div>
+      <div class="stat-card"><div class="stat-val" id="a-partners-count">0</div><div class="stat-lbl">Գործընկերներ</div></div>
+    </div>
+    <div class="admin-tabs" id="admin-tabs"></div>
+    <div id="admin-content"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="exportXLSX()">Ներբեռնել բնակիչների ցուցակը</button>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: ADMIN — CUSTOMER MANAGEMENT
+═══════════════════════════════════════════════════════ -->
+<div id="s-admin-customer" class="screen">
+  <div class="nav admin-nav">
+    <span class="nav-logo">Admin</span>
+    <span style="font-size:12px;color:rgba(255,255,255,.5);cursor:pointer" onclick="goHome()">Բնակչի էջ →</span>
+  </div>
+  <div class="content-full">
+    <div class="detail-back" onclick="showScreen('s-admin')">Հետ՝ ադմին վահանակ</div>
+    <div class="list-row" style="border:none;margin-bottom:14px">
+      <div class="row-left">
+        <div class="row-icon" id="ac-avatar" style="background:var(--accent);color:#fff;font-weight:600;font-size:15px"></div>
+        <div>
+          <div class="row-name" id="ac-name" style="font-size:16px"></div>
+          <div class="row-sub" id="ac-phone"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="stat-card"><div class="stat-val" id="ac-district" style="font-size:13px"></div><div class="stat-lbl">Թաղամաս</div></div>
+      <div class="stat-card"><div class="stat-val" id="ac-building-apt" style="font-size:13px"></div><div class="stat-lbl">Մասնաշենք / Բնակարան</div></div>
+    </div>
+    <div class="section-title" style="margin:18px 0 4px">Պրոմո կոդեր</div>
+    <div id="ac-vouchers-list"></div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: ADMIN — PARTNER MANAGEMENT
+═══════════════════════════════════════════════════════ -->
+<div id="s-admin-partners" class="screen">
+  <div class="nav admin-nav">
+    <span class="nav-logo">Գործընկերներ</span>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span style="font-size:12px;color:rgba(255,255,255,.7);cursor:pointer" onclick="showScreen('s-admin');renderAdminPanel()">Բնակիչներ</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.5);cursor:pointer" onclick="goHome()">Բնակչի էջ →</span>
+    </div>
+  </div>
+  <div class="content-full">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text)">Գործընկերների կառավարում</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">Ավելացնել, խմբագրել կամ ապաակտիվացնել գործընկերներ</div>
+      </div>
+      <button class="btn btn-primary" style="width:auto;padding:10px 16px;font-size:13px" onclick="openAddPartner()">
+        Ավելացնել
+      </button>
+    </div>
+    <div id="admin-partners-list"></div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: FORGOT PASSWORD
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-forgot">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="forgot-step-1">
+      <div class="modal-title">Վերականգնել գաղտնաբառը</div>
+      <div class="form-group">
+        <label class="form-label">Հեռախոսահամար</label>
+        <div class="inp-wrap"><span class="inp-prefix">+374</span><input class="inp inp-phone" type="tel" id="fp-phone" placeholder="XX XXX XXX" maxlength="11"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-forgot')">Չեղարկել</button>
+        <button class="btn btn-primary" onclick="fpSendCode()">Ուղարկել կոդ</button>
+      </div>
+    </div>
+    <div id="forgot-step-2" style="display:none">
+      <div class="modal-title">SMS Հաստատում</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px" id="fp-hint"></p>
+      <div class="otp-row" id="fp-otp-row"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-forgot')">Չեղարկել</button>
+        <button class="btn btn-primary" onclick="fpVerify()">Հաստատել</button>
+      </div>
+    </div>
+    <div id="forgot-step-3" style="display:none">
+      <div class="modal-title">Նոր գաղտնաբառ</div>
+      <div class="form-group">
+        <label class="form-label">Նոր գաղտնաբառ</label>
+        <div class="inp-wrap"><input class="inp" type="password" id="fp-pw1" placeholder="••••••••" oninput="checkPwReqs('fp-pw1','fp-reqs')" style="padding-right:42px"><span class="inp-eye" onclick="togglePass('fp-pw1',this)">Ցույց տալ</span></div>
+        <div id="fp-reqs" class="pw-req"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Հաստատել գաղտնաբառը</label>
+        <div class="inp-wrap"><input class="inp" type="password" id="fp-pw2" placeholder="••••••••" style="padding-right:42px"><span class="inp-eye" onclick="togglePass('fp-pw2',this)">Ցույց տալ</span></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--text3);margin-bottom:12px;line-height:1.5">Գաղտնաբառը պետք է պարունակի առնվազն 8 նիշ, մեծատառ, փոքրատառ, թիվ և հատուկ նշան</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-forgot')">Չեղարկել</button>
+        <button class="btn btn-primary" onclick="fpSavePw()">Պահպանել</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: REGISTER
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-register">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="register-step-1">
+    <div class="modal-title">Գրանցվել</div>
+    <div class="two-col">
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span> Անուն</label>
+        <input class="inp" type="text" id="reg-first" placeholder="Անուն">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span> Ազգանուն</label>
+        <input class="inp" type="text" id="reg-last" placeholder="Ազգանուն">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="req">*</span> Հեռախոսահամար</label>
+      <div class="inp-wrap"><span class="inp-prefix">+374</span><input class="inp inp-phone" type="tel" id="reg-phone" placeholder="XX XXX XXX" maxlength="10" oninput="onRegPhone(this)"></div>
+      <div class="field-msg" id="reg-phone-msg"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="req">*</span> Թաղամաս</label>
+      <select class="inp" id="reg-district">
+        <option value="" disabled selected>Ընտրել թաղամասը</option>
+        <option value="Zover Eco Residence">Zover Eco Residence</option>
+        <option value="Avan Leveloft">Avan Leveloft</option>
+        <option value="Kanaker">Kanaker</option>
+        <option value="Zard town-district">Zard town-district</option>
+      </select>
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span> Մասնաշենք</label>
+        <input class="inp" type="text" id="reg-building" placeholder="Մասնաշենք">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="req">*</span> Բնակարան №</label>
+        <input class="inp" type="text" id="reg-apt" placeholder="47">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="req">*</span> Գաղտնաբառ</label>
+      <div class="inp-wrap"><input class="inp" type="password" id="reg-pw" placeholder="••••••••" oninput="checkPwReqs('reg-pw','reg-reqs')" style="padding-right:42px"><span class="inp-eye" onclick="togglePass('reg-pw',this)">Ցույց տալ</span></div>
+      <div id="reg-reqs" class="pw-req"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Առք ու վաճառքի/ամրագրման պայմանագիր <span class="opt">ըստ ցանկության</span></label>
+      <div class="upload-zone" id="upload-zone" onclick="triggerUpload()">
+        <div class="upload-icon"></div>
+        <div class="upload-label">Ավելացնել ֆայլ</div>
+        <div class="upload-sub">JPG, PNG, PDF · Նկարել կամ ներբեռնել</div>
+      </div>
+      <div id="upload-preview" style="display:none"></div>
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="onFileSelect(this)">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-register')">Վերադառնալ</button>
+      <button class="btn btn-primary" onclick="regSendCode()">Գրանցվել</button>
+    </div>
+    </div>
+    <div id="register-step-2" style="display:none">
+      <div class="modal-title">SMS Հաստատում</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px" id="reg-otp-hint"></p>
+      <div class="otp-row" id="reg-otp-row"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('modal-register')">Չեղարկել</button>
+        <button class="btn btn-primary" onclick="regVerifyCode()">Հաստատել</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: ADD PARTNER
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-partner">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="partner-modal-title">Ավելացնել գործընկեր</div>
+    <div class="form-row"><label>Անուն</label><input class="inp" type="text" id="np-name" placeholder="VEGA"></div>
+    <div class="form-row"><label>Կատեգորիա</label>
+      <select class="inp" id="np-cat">
+        <option value="tech">Տեխնիկա</option>
+        <option value="design">Դիզայն</option>
+        <option value="material">Շինանյութ</option>
+        <option value="furniture">Կահույք</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Գործընկերի լոգո</label>
+      <div class="upload-zone" id="partner-logo-zone" onclick="document.getElementById('partner-logo-input').click()">
+        <div class="upload-icon"></div>
+        <div class="upload-label">Ավելացնել լոգո</div>
+        <div class="upload-sub">JPG, PNG · Կամընտիր</div>
+      </div>
+      <div id="partner-logo-preview" style="display:none"></div>
+      <input type="file" id="partner-logo-input" accept=".jpg,.jpeg,.png" style="display:none" onchange="onPartnerLogoSelect(this)">
+    </div>
+    <div class="form-row"><label>Տարբերանշան (էմոջի) — կիրառվում է, եթե լոգո ավելացված չէ</label><input class="inp" type="text" id="np-icon" placeholder="📺" maxlength="2"></div>
+    <div class="form-row"><label>Զեղչ</label><input class="inp" type="text" id="np-discount" placeholder="10% Զեղչ"></div>
+    <div class="form-row"><label>Նկարագրություն</label><textarea class="inp" id="np-desc" placeholder="Առաջարկի նկարագրություն"></textarea></div>
+    <div class="form-row"><label>Պայմաններ</label><input class="inp" type="text" id="np-terms" placeholder="Գործում է մինչև..."></div>
+    <div class="form-row"><label>Ինչպես Օգտագործել</label><input class="inp" type="text" id="np-how" placeholder="Ցույց տվեք կոդը..."></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-partner')">Փակել</button>
+      <button class="btn btn-primary" onclick="savePartner()">Պահպանել</button>
+    </div>
+  </div>
+</div>
+<!-- ADMIN LINK (hidden, accessible from profile) -->
+<div id="admin-trigger" style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;border-top:1px solid var(--border);display:none" onclick="showScreen('s-admin-login')">
+  Կառավարում
+</div>
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════════════════
+const ADMIN_EMAIL='admin@zover.am', ADMIN_PASS='Zover.2026';
+// Simulated resident database
+let residents=[
+  {id:'r001',first:'Արամ',last:'Սարգսյան',phone:'99123456',pw:'Admin123!',district:'Zover Eco Residence',building:'A1',apt:'47',contractFile:null,contractName:null,date:'04.06.2025',vouchers:[]},
+];
+let partners=[];
+let currentUser=null, currentPartner=null, activeFilter='all';
+const CAT_LABELS={tech:'Տեխնիկա',design:'Դիզայն',material:'Շինանյութ',furniture:'Կահույք'};
+const CAT_COLORS={tech:'#E3F2FD',design:'#F3E5F5',material:'#FFF3E0',furniture:'#E8F5E9'};
+const DISTRICTS=['Zover Eco Residence','Avan Leveloft','Kanaker','Zard town-district'];
+// Partner icon/logo rendering — shows the attached logo image if there is one, otherwise the emoji
+function partnerIconHTML(p){
+  return p.logo?`<img src="${p.logo}" alt="${p.name}" style="width:100%;height:100%;object-fit:contain">`:(p.icon||'🏢');
+}
+function partnerIconBg(p){
+  return p.logo?'background:#fff;padding:6px;box-sizing:border-box':`background:${CAT_COLORS[p.cat]||'#eee'}`;
+}
+// Promo code format: Z + (Մասնաշենք+Բնակարան) + Գործընկերի անվան առաջին տառը
+// Օրինակ՝ Մասնաշենք 1, Բնակարան 47, գործընկեր VEGA → Z147V
+function buildPromoCode(user,partner){
+  const num=(user.building||'').trim()+(user.apt||'').trim();
+  const letter=(partner.name||'X').trim().charAt(0).toUpperCase();
+  return 'Z'+num+letter;
+}
+// ═══════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el){el.classList.add('active');}
+  // Show/hide admin trigger
+  const at=document.getElementById('admin-trigger');
+  if(at) at.style.display=(id==='s-home')?'block':'none';
+}
+function openModal(id){const m=document.getElementById(id);if(m){m.classList.add('open');}}
+function closeModal(id){const m=document.getElementById(id);if(m){m.classList.remove('open');}}
+function togglePass(inputId,icon){
+  const inp=document.getElementById(inputId);
+  if(inp.type==='password'){inp.type='text';icon.className='ti ti-eye-off inp-eye';}
+  else{inp.type='password';icon.className='ti ti-eye inp-eye';}
+}
+function formatPhone(digits){
+  const d=digits.replace(/\D/g,'');
+  if(d.length<=2) return d;
+  if(d.length<=5) return d.slice(0,2)+' '+d.slice(2);
+  return d.slice(0,2)+' '+d.slice(2,5)+' '+d.slice(5,9);
+}
+function validateArmPhone(digits){return /^(33|41|43|44|47|49|55|77|88|91|93|94|95|96|98|99)\d{6}$/.test(digits);}
+function validatePw(pw){
+  return {
+    len: pw.length>=8,
+    upper: /[A-Z]/.test(pw),
+    lower: /[a-z]/.test(pw),
+    num: /[0-9]/.test(pw),
+    special: /[^A-Za-z0-9]/.test(pw),
+    get ok(){return this.len&&this.upper&&this.lower&&this.num&&this.special;}
+  };
+}
+function checkPwReqs(inputId, reqsId){
+  const pw=document.getElementById(inputId).value;
+  const v=validatePw(pw);
+  const el=document.getElementById(reqsId);
+  const reqs=[
+    {key:'len',label:'նվազագույն 8 նիշ'},
+    {key:'upper',label:'Մեծատառ (A-Z)'},
+    {key:'lower',label:'Փոքրատառ (a-z)'},
+    {key:'num',label:'Թիվ (0-9)'},
+    {key:'special',label:'Հատուկ նշան (!@#...)'},
+  ];
+  el.innerHTML=reqs.map(r=>`<div class="pw-req-item ${v[r.key]?'ok':''}"><span class="dot"></span>${r.label}</div>`).join('');
+  return v.ok;
+}
+function buildOTP(containerId, count=4){
+  const c=document.getElementById(containerId);
+  c.innerHTML='';
+  for(let i=0;i<count;i++){
+    const inp=document.createElement('input');
+    inp.className='otp-box';inp.type='text';inp.maxLength=1;inp.dataset.idx=i;
+    inp.addEventListener('input',function(){
+      if(this.value.length===1){this.classList.add('filled');const nxt=c.children[i+1];if(nxt)nxt.focus();}
+      else this.classList.remove('filled');
+    });
+    inp.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&i>0)c.children[i-1].focus();});
+    c.appendChild(inp);
+  }
+  setTimeout(()=>c.children[0].focus(),100);
+}
+function getOTP(containerId){
+  return Array.from(document.getElementById(containerId).children).map(i=>i.value).join('');
+}
+// ═══════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════
+let loginPhoneState=''; // 'exists','new',''
+function onLoginPhone(inp){
+  const raw=inp.value.replace(/\D/g,'');
+  inp.value=formatPhone(raw);
+  const msg=document.getElementById('login-phone-msg');
+  const badge=document.getElementById('login-phone-badge');
+  const regBtn=document.getElementById('register-btn');
+  if(raw.length===8){
+    if(validateArmPhone(raw)){
+      inp.className='inp inp-phone ok';
+      const exists=residents.find(r=>r.phone===raw);
+      if(exists){
+        loginPhoneState='exists';
+        badge.innerHTML='<span class="phone-badge exists">Ակտիվ օգտատեր</span>';
+        msg.textContent='';msg.className='field-msg';
+        regBtn.className='btn btn-outline';
+        document.getElementById('forgot-link').className='link link-visible';
+      } else {
+        loginPhoneState='new';
+        badge.innerHTML='<span class="phone-badge new">Անհրաժեշտ է գրանցվել</span>';
+        msg.textContent='';msg.className='field-msg';
+        regBtn.className='btn btn-register-highlight';
+        document.getElementById('forgot-link').className='link';
+      }
+    } else {
+      inp.className='inp inp-phone error';
+      msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';
+      badge.innerHTML='';loginPhoneState='';
+    }
+  } else {
+    inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';badge.innerHTML='';loginPhoneState='';
+    regBtn.className='btn btn-outline';
+  }
+}
+function doLogin(){
+  const raw=document.getElementById('login-phone').value.replace(/\D/g,'');
+  const pw=document.getElementById('login-pass').value;
+  const pmsg=document.getElementById('login-phone-msg');
+  const pwmsg=document.getElementById('login-pass-msg');
+  let ok=true;
+  if(!validateArmPhone(raw)){
+    document.getElementById('login-phone').className='inp inp-phone error';
+    pmsg.textContent='Հեռախոսահամարը սխալ է։';pmsg.className='field-msg err';ok=false;
+  }
+  if(!pw){
+    document.getElementById('login-pass').className='inp error';
+    pwmsg.textContent='Լրացնել գաղտնաբառը։';pwmsg.className='field-msg err';ok=false;
+  }
+  if(!ok) return;
+  const user=residents.find(r=>r.phone===raw&&r.pw===pw);
+  if(!user){
+    document.getElementById('login-phone').className='inp inp-phone error';
+    document.getElementById('login-pass').className='inp error';
+    pmsg.textContent='';pmsg.className='field-msg';
+    pwmsg.textContent='Հեռախոսահամարը կամ գաղտնաբառը սխալ է։';pwmsg.className='field-msg err';
+    if(loginPhoneState==='new') document.getElementById('register-btn').className='btn btn-register-highlight';
+    return;
+  }
+  currentUser=user;
+  if(!currentUser.vouchers) currentUser.vouchers=[];
+  goHome();
+}
+// ═══════════════════════════════════════════════════════
+// FORGOT PASSWORD
+// ═══════════════════════════════════════════════════════
+let fpPhone='';
+function openForgot(){openModal('modal-forgot');}
+function fpSendCode(){
+  const raw=document.getElementById('fp-phone').value.replace(/\D/g,'');
+  if(!validateArmPhone(raw)){alert('Հեռախոսահամարը սխալ է։');return;}
+  fpPhone=raw;
+  document.getElementById('fp-hint').textContent='Կոդը ուղարկվել է +374 '+raw+' համարին';
+  buildOTP('fp-otp-row',4);
+  document.getElementById('forgot-step-1').style.display='none';
+  document.getElementById('forgot-step-2').style.display='block';
+}
+function fpVerify(){
+  const otp=getOTP('fp-otp-row');
+  if(otp.length<4){alert('Սխալ կոդ։');return;}
+  // Demo: any 4-digit code works
+  document.getElementById('forgot-step-2').style.display='none';
+  document.getElementById('forgot-step-3').style.display='block';
+  checkPwReqs('fp-pw1','fp-reqs');
+}
+function fpSavePw(){
+  const pw1=document.getElementById('fp-pw1').value;
+  const pw2=document.getElementById('fp-pw2').value;
+  if(!validatePw(pw1).ok){alert('Գաղտնաբառի ձևաչափը չի համապատասխանում։');return;}
+  if(pw1!==pw2){alert('Գաղտնաբառերը չեն համապատասխանում։');return;}
+  const user=residents.find(r=>r.phone===fpPhone);
+  if(user) user.pw=pw1;
+  closeModal('modal-forgot');
+  alert('Գաղտնաբառը հաջողությամբ վերականգնվել է');
+  document.getElementById('forgot-step-1').style.display='block';
+  document.getElementById('forgot-step-2').style.display='none';
+  document.getElementById('forgot-step-3').style.display='none';
+}
+// ═══════════════════════════════════════════════════════
+// REGISTER
+// ═══════════════════════════════════════════════════════
+let uploadedFile=null, uploadedFileName='', uploadedFileSize='';
+function openRegister(){
+  // Pre-fill phone if entered
+  const loginPhone=document.getElementById('login-phone').value.replace(/\D/g,'');
+  if(loginPhone) document.getElementById('reg-phone').value=formatPhone(loginPhone);
+  resetRegisterSteps();
+  openModal('modal-register');
+}
+function onRegPhone(inp){
+  const raw=inp.value.replace(/\D/g,'');
+  inp.value=formatPhone(raw);
+  const msg=document.getElementById('reg-phone-msg');
+  if(raw.length===8){
+    if(!validateArmPhone(raw)){
+      inp.className='inp inp-phone error';
+      msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';
+    } else {
+      const exists=residents.find(r=>r.phone===raw);
+      if(exists){
+        inp.className='inp inp-phone error';
+        msg.textContent='Գրանցված հեռախոսահամար';msg.className='field-msg err';
+      } else {
+        inp.className='inp inp-phone ok';msg.textContent='';msg.className='field-msg';
+      }
+    }
+  } else {inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';}
+}
+function triggerUpload(){
+  // Show options
+  const opts=['Նկարել','Ներբեռնել'];
+  const choice=confirm('Նկարել — OK\Ներբեռնել — Cancel');
+  const fi=document.getElementById('file-input');
+  if(choice) fi.setAttribute('capture','environment');
+  else fi.removeAttribute('capture');
+  fi.click();
+}
+function onFileSelect(input){
+  const file=input.files[0];
+  if(!file) return;
+  uploadedFile=file;
+  uploadedFileName=file.name;
+  uploadedFileSize=(file.size/1024).toFixed(0)+' KB';
+  const zone=document.getElementById('upload-zone');
+  zone.classList.add('has-file');
+  zone.innerHTML='<div style="font-size:13px;font-weight:500;color:var(--green)">Ավելացնել ֆայլ</div>';
+  const prev=document.getElementById('upload-preview');
+  if(file.type.startsWith('image/')){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      prev.style.display='flex';
+      prev.className='upload-preview';
+      prev.innerHTML=`<img src="${e.target.result}"><div><div class="upload-preview-name">${file.name}</div><div class="upload-preview-size">${uploadedFileSize}</div></div><button class="btn-ghost" onclick="clearUpload()" style="font-size:20px">×</button>`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    prev.style.display='flex';prev.className='upload-preview';
+    prev.innerHTML=`<div style="width:44px;height:44px;background:var(--bg3);border-radius:6px;display:flex;align-items:center;justify-content:center"></div><div><div class="upload-preview-name">${file.name}</div><div class="upload-preview-size">${uploadedFileSize}</div></div><button class="btn-ghost" onclick="clearUpload()" style="font-size:20px">×</button>`;
+  }
+}
+function clearUpload(){
+  uploadedFile=null;uploadedFileName='';uploadedFileSize='';
+  document.getElementById('file-input').value='';
+  const zone=document.getElementById('upload-zone');
+  zone.classList.remove('has-file');
+  zone.innerHTML='<div class="upload-icon"></div><div class="upload-label">Ավելացնել Ֆայլ</div><div class="upload-sub">JPG, PNG, PDF · Նկարել կամ ներբեռնել</div>';
+  document.getElementById('upload-preview').style.display='none';
+}
+let pendingRegistration=null;
+function regSendCode(){
+  const first=document.getElementById('reg-first').value.trim();
+  const last=document.getElementById('reg-last').value.trim();
+  const raw=document.getElementById('reg-phone').value.replace(/\D/g,'');
+  const dist=document.getElementById('reg-district').value;
+  const bld=document.getElementById('reg-building').value.trim();
+  const apt=document.getElementById('reg-apt').value.trim();
+  const pw=document.getElementById('reg-pw').value;
+  if(!first||!last){alert('Լրացնել Անունը և Ազգանունը');return;}
+  if(!validateArmPhone(raw)){alert('Սխալ հեռախոսահամար։');return;}
+  if(residents.find(r=>r.phone===raw)){alert('Գրանցված հեռախոսահամար');return;}
+  if(!dist){alert('Խնդրում ենք ընտրել թաղամասը։');return;}
+  if(!bld||!apt){alert('Խնդրում ենք լրացնել մասնաշենքը։');return;}
+  if(!validatePw(pw).ok){alert('Գաղտնաբառի ֆորմատը չի համապատասխանում։');return;}
+  pendingRegistration={
+    id:'r'+Date.now(),first,last,phone:raw,pw,
+    district:dist,building:bld,apt,
+    contractFile:uploadedFileName,contractName:uploadedFileName,
+    date:new Date().toLocaleDateString('hy-AM'),vouchers:[]
+  };
+  document.getElementById('reg-otp-hint').textContent='Կոդը ուղարկվել է +374 '+raw+' համարին';
+  buildOTP('reg-otp-row',4);
+  document.getElementById('register-step-1').style.display='none';
+  document.getElementById('register-step-2').style.display='block';
+}
+function regVerifyCode(){
+  const otp=getOTP('reg-otp-row');
+  if(otp.length<4){alert('Սխալ կոդ։');return;}
+  // Demo: any 4-digit code works
+  if(!pendingRegistration) return;
+  residents.push(pendingRegistration);
+  currentUser=pendingRegistration;
+  pendingRegistration=null;
+  closeModal('modal-register');
+  clearUpload();
+  resetRegisterSteps();
+  goHome();
+}
+function resetRegisterSteps(){
+  document.getElementById('register-step-1').style.display='block';
+  document.getElementById('register-step-2').style.display='none';
+}
+// ═══════════════════════════════════════════════════════
+// HOME / PARTNERS
+// ═══════════════════════════════════════════════════════
+function setNavAvatars(){
+  if(!currentUser) return;
+  const init=(currentUser.first[0]||'')+(currentUser.last[0]||'');
+  ['nav-avatar','d-av','v-av','mv-av','pr-av'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=init;});
+  const nn=document.getElementById('nav-name');
+  if(nn) nn.textContent=currentUser.first+' '+(currentUser.last[0]||'')+'.';
+}
+function goHome(){
+  setNavAvatars();renderPartners(activeFilter);showScreen('s-home');setBot('bn-home');
+}
+function goMyVouchers(){renderMyVouchers();showScreen('s-myvouchers');setBot('bn-vouchers');}
+function goProfile(){
+  if(!currentUser) return;
+  const init=(currentUser.first[0]||'')+(currentUser.last[0]||'');
+  document.getElementById('pr-avatar-big').textContent=init;
+  document.getElementById('pr-fullname').textContent=currentUser.first+' '+currentUser.last;
+  document.getElementById('pr-district-disp').textContent=currentUser.district;
+  document.getElementById('pr-phone-disp').textContent='+374 '+currentUser.phone;
+  document.getElementById('pr-dist-val').textContent=currentUser.district;
+  document.getElementById('pr-building-val').textContent=currentUser.building;
+  document.getElementById('pr-apt-val').textContent=currentUser.apt;
+  document.getElementById('pr-vc').textContent=(currentUser.vouchers||[]).length+' ակտիվ';
+  setNavAvatars();showScreen('s-profile');setBot('bn-profile');
+}
+function doLogout(){currentUser=null;showScreen('s-login');}
+function setBot(activeId){
+ const key={'bn-home':'home','bn-vouchers':'vouchers','bn-profile':'profile'}[activeId];
+ document.querySelectorAll('.hnav a').forEach(a=>a.classList.toggle('active',a.dataset.nav===key));
+ ['bn-home','bn-vouchers','bn-profile'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id===activeId);});
+}
+function filterCat(el,cat){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');activeFilter=cat;renderPartners(cat);
+}
+function renderPartners(cat){
+  const grid=document.getElementById('partner-grid');
+  const base=partners.filter(p=>p.active!==false);
+  const list=cat==='all'?base:base.filter(p=>p.cat===cat);
+  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">Գործընկներ չկա</div>';return;}
+  grid.innerHTML=list.map(p=>`
+    <div class="partner-card" onclick="openPartner('${p.id}')">
+      <div class="p-icon" style="${partnerIconBg(p)}">${partnerIconHTML(p)}</div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-cat">${CAT_LABELS[p.cat]||p.cat}</div>
+      <div class="p-badge">${p.discount}</div>
+    </div>`).join('');
+}
+function openPartner(id){
+  currentPartner=partners.find(p=>p.id===id);if(!currentPartner) return;
+  document.getElementById('d-icon').innerHTML=partnerIconHTML(currentPartner);
+  document.getElementById('d-icon').setAttribute('style',partnerIconBg(currentPartner));
+  document.getElementById('d-name').textContent=currentPartner.name;
+  document.getElementById('d-cat').textContent=CAT_LABELS[currentPartner.cat]||currentPartner.cat;
+  document.getElementById('d-discount').textContent=currentPartner.discount;
+  document.getElementById('d-desc').textContent=currentPartner.desc;
+  document.getElementById('d-terms').textContent='⏱ '+currentPartner.terms;
+  document.getElementById('d-how').textContent=currentPartner.how;
+  const btn=document.getElementById('get-voucher-btn');
+  const existing=currentUser?currentUser.vouchers.find(v=>v.partnerId===id):null;
+  if(existing){
+    btn.className='btn btn-primary';btn.disabled=false;
+    btn.innerHTML='Գեներացված կոդ — բացել';
+    btn.onclick=()=>showVoucherScreen(existing);
+  } else {
+    btn.className='btn btn-primary';btn.disabled=false;
+    btn.innerHTML='Ստանալ պրոմո կոդ';
+    btn.onclick=genVoucher;
+  }
+  showScreen('s-detail');
+}
+function genVoucher(){
+  if(!currentPartner||!currentUser) return;
+  const code=buildPromoCode(currentUser,currentPartner);
+  const v={partnerId:currentPartner.id,code,partner:currentPartner.name,discount:currentPartner.discount,icon:currentPartner.icon,logo:currentPartner.logo,bg:CAT_COLORS[currentPartner.cat]||'#eee'};
+  currentUser.vouchers=currentUser.vouchers.filter(x=>x.partnerId!==currentPartner.id);
+  currentUser.vouchers.push(v);
+  updateAdminStats();showVoucherScreen(v);
+}
+function showVoucherScreen(v){
+  const p=partners.find(x=>x.id===v.partnerId);
+  const lg=document.getElementById('v-logo');
+  if(lg){
+    lg.innerHTML=p?partnerIconHTML(p):(v.logo?`<img src="${v.logo}" alt="${v.partner}">`:(v.icon||''));
+    lg.setAttribute('style',(p&&p.logo)||v.logo?'background:#fff;border:1px solid var(--border)':'background:'+(v.bg||'var(--light)'));
+  }
+  document.getElementById('v-partner-name').textContent=v.partner+' · '+v.discount;
+  document.getElementById('v-code').textContent=v.code;
+  document.getElementById('v-how').textContent=p?p.how:'Ցույց տվեք կոդը գանձապահին։';
+  showScreen('s-voucher');
+}
+function copyCode(btn){
+  navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('v-code').textContent);
+  btn.innerHTML='Փատճենված';
+  setTimeout(()=>{btn.innerHTML='Փատճենել';},1800);
+}
+function renderMyVouchers(){
+  const el=document.getElementById('my-vouchers-list');
+  const vList=(currentUser&&currentUser.vouchers)||[];
+  if(!vList.length){el.innerHTML='<div class="empty-state">Ակտիվ կտրոններ չունեք</div>';return;}
+  el.innerHTML=vList.map(v=>`
+    <div class="list-row" onclick="showVoucherById('${v.partnerId}')" style="cursor:pointer">
+      <div class="row-left">
+        <div class="row-icon" style="${v.logo?'background:#fff;padding:5px;box-sizing:border-box':'background:'+v.bg}">${v.logo?`<img src="${v.logo}" alt="${v.partner}" style="width:100%;height:100%;object-fit:contain">`:v.icon}</div>
+        <div><div class="row-name">${v.partner}</div><div class="row-sub">${v.discount}</div></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-family:monospace;font-weight:700;color:var(--accent)">${v.code}</div>
+      </div>
+    </div>`).join('');
+}
+function showVoucherById(pid){
+  if(!currentUser) return;
+  const v=currentUser.vouchers.find(x=>x.partnerId===pid);const p=partners.find(x=>x.id===pid);
+  if(v&&p){currentPartner=p;showVoucherScreen(v);}
+}
+// ═══════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════
+function adminLogin(){
+  if(document.getElementById('adm-email').value===ADMIN_EMAIL&&document.getElementById('adm-pass').value===ADMIN_PASS){
+    renderAdminPanel();showScreen('s-admin');
+  } else alert('Աշխատակցի տվյալները սխալ են։');
+}
+function updateAdminStats(){
+  const ar=document.getElementById('a-residents');if(ar)ar.textContent=residents.length;
+  const av=document.getElementById('a-vouchers');if(av)av.textContent=residents.reduce((sum,r)=>sum+((r.vouchers||[]).length),0);
+  const ap=document.getElementById('a-partners-count');if(ap)ap.textContent=partners.length;
+}
+function renderAdminPanel(){
+  updateAdminStats();
+  const tabs=document.getElementById('admin-tabs');
+  const allTabs=['Բոլորը',...DISTRICTS];
+  tabs.innerHTML=allTabs.map((t,i)=>`<div class="a-tab${i===0?' active':''}" onclick="adminTab(this,'${t}')">${t} (${t==='Բոլորը'?residents.length:residents.filter(r=>r.district===t).length})</div>`).join('');
+  renderAdminResidents('Բոլոր');
+}
+function adminTab(el,tab){
+  document.querySelectorAll('.a-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderAdminResidents(tab);
+}
+function renderAdminResidents(filter){
+  const list=filter==='Բոլորը'?residents:residents.filter(r=>r.district===filter);
+  const c=document.getElementById('admin-content');
+  if(!list.length){c.innerHTML='<div class="empty-state">Բնակիչներ չեն գտնվել</div>';return;}
+  c.innerHTML=`<div class="table-wrap"><table class="res-table">
+    <thead><tr><th>Անուն</th><th>Հեռախոս</th><th>Թաղամաս</th><th>Մասնաշենք</th><th>Բնակարան</th><th>Ամսաթիվ</th><th>Ֆայլ</th><th></th></tr></thead>
+    <tbody>${list.map(r=>`<tr>
+      <td><strong>${r.first} ${r.last}</strong></td>
+      <td>+374 ${r.phone}</td>
+      <td style="font-size:12px">${r.district}</td>
+      <td>${r.building}</td>
+      <td>${r.apt}</td>
+      <td style="font-size:11px;color:var(--text3)">${r.date}</td>
+      <td>${r.contractFile?`<span style="font-size:11px;color:var(--accent);cursor:pointer">${r.contractFile.slice(0,8)}..</span>`:'<span style="color:var(--text3);font-size:11px">—</span>'}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px" onclick="openCustomerPage('${r.id}')" title="Կառավարել պրոմո կոդերը">Կոդեր</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function openCustomerPage(id){
+  const r=residents.find(x=>x.id===id);if(!r) return;
+  renderCustomerPage(r.id);
+  showScreen('s-admin-customer');
+}
+function renderCustomerPage(id){
+  const r=residents.find(x=>x.id===id);if(!r) return;
+  document.getElementById('ac-avatar').textContent=(r.first[0]||'')+(r.last[0]||'');
+  document.getElementById('ac-name').textContent=r.first+' '+r.last;
+  document.getElementById('ac-phone').textContent='+374 '+r.phone;
+  document.getElementById('ac-district').textContent=r.district;
+  document.getElementById('ac-building-apt').textContent=r.building+' / '+r.apt;
+  const list=document.getElementById('ac-vouchers-list');
+  const vList=r.vouchers||[];
+  if(!vList.length){
+    list.innerHTML='<div class="empty-state">Այս բնակիչը դեռևս պրոմո կոդ չի ստացել</div>';
+    return;
+  }
+  list.innerHTML=vList.map(v=>{
+    const p=partners.find(x=>x.id===v.partnerId);
+    const iconHTML=p?partnerIconHTML(p):(v.logo?`<img src="${v.logo}" alt="${v.partner}" style="width:100%;height:100%;object-fit:contain">`:v.icon);
+    const iconBg=(p&&p.logo)||v.logo?'background:#fff;padding:5px;box-sizing:border-box':'background:'+v.bg;
+    return `<div class="list-row">
+      <div class="row-left">
+        <div class="row-icon" style="${iconBg}">${iconHTML}</div>
+        <div>
+          <div class="row-name">${v.partner}</div>
+          <div class="row-sub" style="font-family:monospace">${v.code}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function showAdminPartnersScreen(){
+  showScreen('s-admin-partners');
+  renderAdminPartners();
+}
+function renderAdminPartners(){
+  const c=document.getElementById('admin-partners-list');
+  if(!c) return;
+  if(!partners.length){
+    c.innerHTML='<div class="empty-state">Գործընկեր դեռ ավելացված չէ<br><span style="font-size:12px;color:var(--text3);margin-top:6px;display:block">Սեղմեք «Ավելացնել» կոճակը</span></div>';
+    return;
+  }
+  c.innerHTML=partners.map(p=>`
+    <div class="list-row">
+      <div class="row-left">
+        <div class="row-icon" style="${p.logo?'background:#fff;padding:5px;box-sizing:border-box':'background:'+(CAT_COLORS[p.cat]||'#eee')}">${partnerIconHTML(p)}</div>
+        <div>
+          <div class="row-name">${p.name}</div>
+          <div class="row-sub">${CAT_LABELS[p.cat]||p.cat} · ${p.discount}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${p.active===false?'badge-gray':'badge-green'}">${p.active===false?'Անգործուն':'Ակտիվ'}</span>
+        <label class="switch" title="${p.active===false?'Ակտիվացնել':'Ապաակտիվացնել'}"><input type="checkbox" ${p.active===false?'':'checked'} onchange="togglePartnerActive('${p.id}',this)"><span class="sw-slider"></span></label>
+        <button class="btn-ghost" onclick="openEditPartner('${p.id}')" style="font-size:20px;color:var(--accent)" title="Խմբագրել">Խմբագրել</button>
+      </div>
+    </div>`).join('');
+}
+function togglePartnerActive(id,checkbox){
+  const p=partners.find(x=>x.id===id);if(!p) return;
+  p.active=checkbox.checked;
+  renderAdminPartners();
+  updateAdminStats();
+}
+let editingPartnerId=null;
+let newPartnerLogo=null;
+function openAddPartner(){
+  editingPartnerId=null;
+  document.getElementById('partner-modal-title').textContent='Ավելացնել գործընկեր';
+  document.getElementById('np-name').value='';
+  document.getElementById('np-icon').value='';
+  document.getElementById('np-discount').value='';
+  document.getElementById('np-desc').value='';
+  document.getElementById('np-terms').value='';
+  document.getElementById('np-how').value='';
+  clearPartnerLogo();
+  openModal('modal-partner');
+}
+function openEditPartner(id){
+  const p=partners.find(x=>x.id===id);if(!p) return;
+  editingPartnerId=id;
+  document.getElementById('partner-modal-title').textContent='Խմբագրել գործընկերին';
+  document.getElementById('np-name').value=p.name;
+  document.getElementById('np-cat').value=p.cat;
+  document.getElementById('np-icon').value=p.icon||'';
+  document.getElementById('np-discount').value=p.discount||'';
+  document.getElementById('np-desc').value=p.desc||'';
+  document.getElementById('np-terms').value=p.terms||'';
+  document.getElementById('np-how').value=p.how||'';
+  newPartnerLogo=p.logo||null;
+  const prev=document.getElementById('partner-logo-preview');
+  if(newPartnerLogo){
+    prev.style.display='flex';prev.className='upload-preview';
+    prev.innerHTML=`<img src="${newPartnerLogo}" style="width:44px;height:44px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box"><div><div class="upload-preview-name">Ընթացիկ լոգո</div></div><button class="btn-ghost" onclick="clearPartnerLogo()" style="font-size:20px">×</button>`;
+  } else {
+    prev.style.display='none';
+  }
+  openModal('modal-partner');
+}
+function onPartnerLogoSelect(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    newPartnerLogo=e.target.result;
+    const prev=document.getElementById('partner-logo-preview');
+    prev.style.display='flex';
+    prev.className='upload-preview';
+    prev.innerHTML=`<img src="${newPartnerLogo}" style="width:44px;height:44px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box"><div><div class="upload-preview-name">${file.name}</div></div><button class="btn-ghost" onclick="clearPartnerLogo()" style="font-size:20px">×</button>`;
+  };
+  reader.readAsDataURL(file);
+}
+function clearPartnerLogo(){
+  newPartnerLogo=null;
+  const fi=document.getElementById('partner-logo-input');if(fi)fi.value='';
+  const prev=document.getElementById('partner-logo-preview');if(prev)prev.style.display='none';
+}
+function savePartner(){
+  const name=document.getElementById('np-name').value.trim();
+  if(!name){alert('Լրացնել անունը');return;}
+  const data={
+    name,cat:document.getElementById('np-cat').value,
+    icon:document.getElementById('np-icon').value||'🏢',
+    logo:newPartnerLogo,
+    discount:document.getElementById('np-discount').value||'Հատուկ առաջարկ',
+    desc:document.getElementById('np-desc').value||'',
+    terms:document.getElementById('np-terms').value||'',
+    how:document.getElementById('np-how').value||'Ցույց տվեք կոդը.'
+  };
+  if(editingPartnerId){
+    const p=partners.find(x=>x.id===editingPartnerId);
+    if(p) Object.assign(p,data);
+  } else {
+    partners.push(Object.assign({id:'p'+Date.now(),active:true},data));
+  }
+  closeModal('modal-partner');clearPartnerLogo();editingPartnerId=null;
+  updateAdminStats();
+  showAdminPartnersScreen();
+}
+function exportXLSX(){
+  // CSV export (real XLSX needs a library)
+  const rows=[['Անուն','Ազգանուն','Հեռախոսահամար','Թաղամաս','Մասնաշենք','Բնակարան','Ամսաթիվ']];
+  residents.forEach(r=>rows.push([r.first,r.last,'+374 '+r.phone,r.district,r.building,r.apt,r.date]));
+  const csv=rows.map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='zover_residents_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// --- DEMO DATA - delete this block for production ---
+partners=[
+ {id:'p1',name:'VEGA',cat:'tech',icon:'📺',logo:null,active:true,discount:'10% զեղչ',desc:'Կենցաղային տեխնիկա և էլեկտրոնիկա։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը գանձապահին։'},
+ {id:'p2',name:'Studio 47',cat:'design',icon:'🎨',logo:null,active:true,discount:'15% զեղչ',desc:'Ինտերիերի դիզայն և հեղինակային հսկողություն։',terms:'Գործում է մինչև 31.12.2026',how:'Նշեք կոդը խորհրդատվության պատվերի ժամանակ։'},
+ {id:'p3',name:'BuildMax',cat:'material',icon:'🧱',logo:null,active:true,discount:'12% զեղչ',desc:'Շինանյութ և վերանորոգման փաթեթներ։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը պատվերը ձևակերպելիս։'},
+ {id:'p4',name:'Loom Home',cat:'furniture',icon:'🛋',logo:null,active:true,discount:'20% զեղչ',desc:'Կահույք՝ չափման և տեղադրման ծառայությամբ։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը սրահում։'},
+];
+// --- END DEMO DATA ---
+
+// INIT
+renderPartners('all');
+updateAdminStats();
+</script>
+</body>
+</html>
