@@ -739,20 +739,46 @@ a,button,.cat-btn,.partner-card,.list-row{outline-offset:3px}
 <div id="admin-trigger" style="text-align:center;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;border-top:1px solid var(--border);display:none" onclick="showScreen('s-admin-login')">
   Կառավարում
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 // DATA STORE
 // ═══════════════════════════════════════════════════════
-const ADMIN_EMAIL='admin@zover.am', ADMIN_PASS='Zover.2026';
-// Simulated resident database
-let residents=[
-  {id:'r001',first:'Արամ',last:'Սարգսյան',phone:'99123456',pw:'Admin123!',district:'Zover Eco Residence',building:'A1',apt:'47',contractFile:null,contractName:null,date:'04.06.2025',vouchers:[]},
-];
-let partners=[];
+/* ┌───────────────────────────────────────────────────────┐
+   │  SUPABASE SETTINGS — the only two lines you may edit   │
+   └───────────────────────────────────────────────────────┘ */
+const SUPABASE_URL = 'https://rerzixogkyyuxqtuanll.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rkiJ0D60evhyl27cZgwpEQ_u29uS5LG';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const ADMIN_EMAIL='admin@zover.am';
+
+let partners=[], myVouchers=[], adminResidents=[], adminPw='', currentCustomer=null;
 let currentUser=null, currentPartner=null, activeFilter='all';
 const CAT_LABELS={tech:'Տեխնիկա',design:'Դիզայն',material:'Շինանյութ',furniture:'Կահույք'};
-const CAT_COLORS={tech:'#E3F2FD',design:'#F3E5F5',material:'#FFF3E0',furniture:'#E8F5E9'};
+const CAT_COLORS={tech:'#DDE7EC',design:'#EFDCD6',material:'#E8E8E8',furniture:'#C9D6DD'};
 const DISTRICTS=['Zover Eco Residence','Avan Leveloft','Kanaker','Zard town-district'];
+
+function dbErr(e){console.error(e);alert('Կապի սխալ։ Խնդրում ենք փորձել կրկին։');}
+function mapPartner(r){return{id:r.id,name:r.name,cat:r.category,icon:r.icon,logo:r.logo,
+  discount:r.discount,desc:r.description,terms:r.terms,how:r.how_to,active:r.active};}
+function mapResident(r){return{id:r.id,first:r.first_name,last:r.last_name,phone:r.phone,
+  district:r.district,building:r.building,apt:r.apt,contractFile:r.contract_url,
+  date:r.created_at?new Date(r.created_at).toLocaleDateString('hy-AM'):''};}
+function mapVoucher(v){return{partnerId:v.partner_id,code:v.code,partner:v.partner_name,
+  discount:v.discount,logo:v.logo,icon:v.icon,bg:CAT_COLORS[v.category]||'#eee'};}
+
+async function loadPartners(){
+  const {data,error}=await db.from('partners').select('*').order('created_at');
+  if(error){dbErr(error);return;}
+  partners=(data||[]).map(mapPartner);
+}
+async function loadMyVouchers(){
+  if(!currentUser){myVouchers=[];return;}
+  const {data,error}=await db.rpc('list_vouchers',{p_resident:currentUser.id});
+  if(error){dbErr(error);myVouchers=[];return;}
+  myVouchers=(data||[]).map(mapVoucher);
+}
 // Partner icon/logo rendering — shows the attached logo image if there is one, otherwise the emoji
 function partnerIconHTML(p){
   return p.logo?`<img src="${p.logo}" alt="${p.name}" style="width:100%;height:100%;object-fit:contain">`:(p.icon||'🏢');
@@ -762,11 +788,6 @@ function partnerIconBg(p){
 }
 // Promo code format: Z + (Մասնաշենք+Բնակարան) + Գործընկերի անվան առաջին տառը
 // Օրինակ՝ Մասնաշենք 1, Բնակարան 47, գործընկեր VEGA → Z147V
-function buildPromoCode(user,partner){
-  const num=(user.building||'').trim()+(user.apt||'').trim();
-  const letter=(partner.name||'X').trim().charAt(0).toUpperCase();
-  return 'Z'+num+letter;
-}
 // ═══════════════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════════════
@@ -838,40 +859,37 @@ function getOTP(containerId){
 // LOGIN
 // ═══════════════════════════════════════════════════════
 let loginPhoneState=''; // 'exists','new',''
-function onLoginPhone(inp){
+async function onLoginPhone(inp){
   const raw=inp.value.replace(/\D/g,'');
   inp.value=formatPhone(raw);
   const msg=document.getElementById('login-phone-msg');
   const badge=document.getElementById('login-phone-badge');
   const regBtn=document.getElementById('register-btn');
-  if(raw.length===8){
-    if(validateArmPhone(raw)){
-      inp.className='inp inp-phone ok';
-      const exists=residents.find(r=>r.phone===raw);
-      if(exists){
-        loginPhoneState='exists';
-        badge.innerHTML='<span class="phone-badge exists">Ակտիվ օգտատեր</span>';
-        msg.textContent='';msg.className='field-msg';
-        regBtn.className='btn btn-outline';
-        document.getElementById('forgot-link').className='link link-visible';
-      } else {
-        loginPhoneState='new';
-        badge.innerHTML='<span class="phone-badge new">Անհրաժեշտ է գրանցվել</span>';
-        msg.textContent='';msg.className='field-msg';
-        regBtn.className='btn btn-register-highlight';
-        document.getElementById('forgot-link').className='link';
-      }
-    } else {
-      inp.className='inp inp-phone error';
-      msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';
-      badge.innerHTML='';loginPhoneState='';
-    }
-  } else {
-    inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';badge.innerHTML='';loginPhoneState='';
+  if(raw.length!==8){
+    inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';
+    badge.innerHTML='';loginPhoneState='';regBtn.className='btn btn-outline';return;
+  }
+  if(!validateArmPhone(raw)){
+    inp.className='inp inp-phone error';
+    msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';
+    badge.innerHTML='';loginPhoneState='';return;
+  }
+  inp.className='inp inp-phone ok';msg.textContent='';msg.className='field-msg';
+  const {data,error}=await db.rpc('phone_exists',{p_phone:raw});
+  if(error){badge.innerHTML='';return;}
+  if(data===true){
+    loginPhoneState='exists';
+    badge.innerHTML='<span class="phone-badge exists">Ակտիվ օգտատեր</span>';
     regBtn.className='btn btn-outline';
+    document.getElementById('forgot-link').className='link link-visible';
+  } else {
+    loginPhoneState='new';
+    badge.innerHTML='<span class="phone-badge new">Անհրաժեշտ է գրանցվել</span>';
+    regBtn.className='btn btn-register-highlight';
+    document.getElementById('forgot-link').className='link';
   }
 }
-function doLogin(){
+async function doLogin(){
   const raw=document.getElementById('login-phone').value.replace(/\D/g,'');
   const pw=document.getElementById('login-pass').value;
   const pmsg=document.getElementById('login-phone-msg');
@@ -886,8 +904,9 @@ function doLogin(){
     pwmsg.textContent='Լրացնել գաղտնաբառը։';pwmsg.className='field-msg err';ok=false;
   }
   if(!ok) return;
-  const user=residents.find(r=>r.phone===raw&&r.pw===pw);
-  if(!user){
+  const {data,error}=await db.rpc('login_resident',{p_phone:raw,p_password:pw});
+  if(error){dbErr(error);return;}
+  if(!data||!data.id){
     document.getElementById('login-phone').className='inp inp-phone error';
     document.getElementById('login-pass').className='inp error';
     pmsg.textContent='';pmsg.className='field-msg';
@@ -895,9 +914,8 @@ function doLogin(){
     if(loginPhoneState==='new') document.getElementById('register-btn').className='btn btn-register-highlight';
     return;
   }
-  currentUser=user;
-  if(!currentUser.vouchers) currentUser.vouchers=[];
-  goHome();
+  currentUser=mapResident(data);
+  await goHome();
 }
 // ═══════════════════════════════════════════════════════
 // FORGOT PASSWORD
@@ -921,13 +939,14 @@ function fpVerify(){
   document.getElementById('forgot-step-3').style.display='block';
   checkPwReqs('fp-pw1','fp-reqs');
 }
-function fpSavePw(){
+async function fpSavePw(){
   const pw1=document.getElementById('fp-pw1').value;
   const pw2=document.getElementById('fp-pw2').value;
   if(!validatePw(pw1).ok){alert('Գաղտնաբառի ձևաչափը չի համապատասխանում։');return;}
   if(pw1!==pw2){alert('Գաղտնաբառերը չեն համապատասխանում։');return;}
-  const user=residents.find(r=>r.phone===fpPhone);
-  if(user) user.pw=pw1;
+  const {data,error}=await db.rpc('reset_password',{p_phone:fpPhone,p_password:pw1});
+  if(error){dbErr(error);return;}
+  if(data!==true){alert('Այս համարով բնակիչ չի գտնվել։');return;}
   closeModal('modal-forgot');
   alert('Գաղտնաբառը հաջողությամբ վերականգնվել է');
   document.getElementById('forgot-step-1').style.display='block';
@@ -945,24 +964,23 @@ function openRegister(){
   resetRegisterSteps();
   openModal('modal-register');
 }
-function onRegPhone(inp){
+async function onRegPhone(inp){
   const raw=inp.value.replace(/\D/g,'');
   inp.value=formatPhone(raw);
   const msg=document.getElementById('reg-phone-msg');
-  if(raw.length===8){
-    if(!validateArmPhone(raw)){
-      inp.className='inp inp-phone error';
-      msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';
-    } else {
-      const exists=residents.find(r=>r.phone===raw);
-      if(exists){
-        inp.className='inp inp-phone error';
-        msg.textContent='Գրանցված հեռախոսահամար';msg.className='field-msg err';
-      } else {
-        inp.className='inp inp-phone ok';msg.textContent='';msg.className='field-msg';
-      }
-    }
-  } else {inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';}
+  if(raw.length!==8){inp.className='inp inp-phone';msg.textContent='';msg.className='field-msg';return;}
+  if(!validateArmPhone(raw)){
+    inp.className='inp inp-phone error';
+    msg.textContent='Սխալ հեռախոսահամար';msg.className='field-msg err';return;
+  }
+  const {data,error}=await db.rpc('phone_exists',{p_phone:raw});
+  if(error) return;
+  if(data===true){
+    inp.className='inp inp-phone error';
+    msg.textContent='Գրանցված հեռախոսահամար';msg.className='field-msg err';
+  } else {
+    inp.className='inp inp-phone ok';msg.textContent='';msg.className='field-msg';
+  }
 }
 function triggerUpload(){
   // Show options
@@ -1005,7 +1023,7 @@ function clearUpload(){
   document.getElementById('upload-preview').style.display='none';
 }
 let pendingRegistration=null;
-function regSendCode(){
+async function regSendCode(){
   const first=document.getElementById('reg-first').value.trim();
   const last=document.getElementById('reg-last').value.trim();
   const raw=document.getElementById('reg-phone').value.replace(/\D/g,'');
@@ -1015,33 +1033,39 @@ function regSendCode(){
   const pw=document.getElementById('reg-pw').value;
   if(!first||!last){alert('Լրացնել Անունը և Ազգանունը');return;}
   if(!validateArmPhone(raw)){alert('Սխալ հեռախոսահամար։');return;}
-  if(residents.find(r=>r.phone===raw)){alert('Գրանցված հեռախոսահամար');return;}
   if(!dist){alert('Խնդրում ենք ընտրել թաղամասը։');return;}
   if(!bld||!apt){alert('Խնդրում ենք լրացնել մասնաշենքը։');return;}
   if(!validatePw(pw).ok){alert('Գաղտնաբառի ֆորմատը չի համապատասխանում։');return;}
-  pendingRegistration={
-    id:'r'+Date.now(),first,last,phone:raw,pw,
-    district:dist,building:bld,apt,
-    contractFile:uploadedFileName,contractName:uploadedFileName,
-    date:new Date().toLocaleDateString('hy-AM'),vouchers:[]
-  };
+  const {data:taken,error}=await db.rpc('phone_exists',{p_phone:raw});
+  if(error){dbErr(error);return;}
+  if(taken===true){alert('Գրանցված հեռախոսահամար');return;}
+  pendingRegistration={first,last,phone:raw,pw,district:dist,building:bld,apt,
+    contractFile:uploadedFileName||null};
   document.getElementById('reg-otp-hint').textContent='Կոդը ուղարկվել է +374 '+raw+' համարին';
   buildOTP('reg-otp-row',4);
   document.getElementById('register-step-1').style.display='none';
   document.getElementById('register-step-2').style.display='block';
 }
-function regVerifyCode(){
+async function regVerifyCode(){
   const otp=getOTP('reg-otp-row');
   if(otp.length<4){alert('Սխալ կոդ։');return;}
-  // Demo: any 4-digit code works
   if(!pendingRegistration) return;
-  residents.push(pendingRegistration);
-  currentUser=pendingRegistration;
+  const r=pendingRegistration;
+  const {data,error}=await db.rpc('register_resident',{
+    p_first:r.first,p_last:r.last,p_phone:r.phone,p_password:r.pw,
+    p_district:r.district,p_building:r.building,p_apt:r.apt,p_contract_url:r.contractFile
+  });
+  if(error){
+    if((error.message||'').indexOf('duplicate')>-1) alert('Գրանցված հեռախոսահամար');
+    else dbErr(error);
+    return;
+  }
+  currentUser=mapResident(data);
   pendingRegistration=null;
   closeModal('modal-register');
   clearUpload();
   resetRegisterSteps();
-  goHome();
+  await goHome();
 }
 function resetRegisterSteps(){
   document.getElementById('register-step-1').style.display='block';
@@ -1057,11 +1081,16 @@ function setNavAvatars(){
   const nn=document.getElementById('nav-name');
   if(nn) nn.textContent=currentUser.first+' '+(currentUser.last[0]||'')+'.';
 }
-function goHome(){
-  setNavAvatars();renderPartners(activeFilter);showScreen('s-home');setBot('bn-home');
+async function goHome(){
+  setNavAvatars();
+  await loadPartners();
+  await loadMyVouchers();
+  renderPartners(activeFilter);
+  showScreen('s-home');setBot('bn-home');
 }
-function goMyVouchers(){renderMyVouchers();showScreen('s-myvouchers');setBot('bn-vouchers');}
-function goProfile(){
+async function goMyVouchers(){await loadMyVouchers();renderMyVouchers();showScreen('s-myvouchers');setBot('bn-vouchers');}
+async function goProfile(){
+  await loadMyVouchers();
   if(!currentUser) return;
   const init=(currentUser.first[0]||'')+(currentUser.last[0]||'');
   document.getElementById('pr-avatar-big').textContent=init;
@@ -1071,10 +1100,10 @@ function goProfile(){
   document.getElementById('pr-dist-val').textContent=currentUser.district;
   document.getElementById('pr-building-val').textContent=currentUser.building;
   document.getElementById('pr-apt-val').textContent=currentUser.apt;
-  document.getElementById('pr-vc').textContent=(currentUser.vouchers||[]).length+' ակտիվ';
+  document.getElementById('pr-vc').textContent=myVouchers.length+' ակտիվ';
   setNavAvatars();showScreen('s-profile');setBot('bn-profile');
 }
-function doLogout(){currentUser=null;showScreen('s-login');}
+function doLogout(){currentUser=null;myVouchers=[];adminPw='';showScreen('s-login');}
 function setBot(activeId){
  const key={'bn-home':'home','bn-vouchers':'vouchers','bn-profile':'profile'}[activeId];
  document.querySelectorAll('.hnav a').forEach(a=>a.classList.toggle('active',a.dataset.nav===key));
@@ -1108,7 +1137,7 @@ function openPartner(id){
   document.getElementById('d-terms').textContent='⏱ '+currentPartner.terms;
   document.getElementById('d-how').textContent=currentPartner.how;
   const btn=document.getElementById('get-voucher-btn');
-  const existing=currentUser?currentUser.vouchers.find(v=>v.partnerId===id):null;
+  const existing=currentUser?myVouchers.find(v=>v.partnerId===id):null;
   if(existing){
     btn.className='btn btn-primary';btn.disabled=false;
     btn.innerHTML='Գեներացված կոդ — բացել';
@@ -1120,13 +1149,15 @@ function openPartner(id){
   }
   showScreen('s-detail');
 }
-function genVoucher(){
+async function genVoucher(){
   if(!currentPartner||!currentUser) return;
-  const code=buildPromoCode(currentUser,currentPartner);
-  const v={partnerId:currentPartner.id,code,partner:currentPartner.name,discount:currentPartner.discount,icon:currentPartner.icon,logo:currentPartner.logo,bg:CAT_COLORS[currentPartner.cat]||'#eee'};
-  currentUser.vouchers=currentUser.vouchers.filter(x=>x.partnerId!==currentPartner.id);
-  currentUser.vouchers.push(v);
-  updateAdminStats();showVoucherScreen(v);
+  const {data,error}=await db.rpc('get_or_create_voucher',
+    {p_resident:currentUser.id,p_partner:currentPartner.id});
+  if(error){dbErr(error);return;}
+  if(!data||!data.id){alert('Կոդը չհաջողվեց ստեղծել։');return;}
+  await loadMyVouchers();
+  const v=myVouchers.find(x=>x.partnerId===currentPartner.id);
+  if(v) showVoucherScreen(v);
 }
 function showVoucherScreen(v){
   const p=partners.find(x=>x.id===v.partnerId);
@@ -1147,7 +1178,7 @@ function copyCode(btn){
 }
 function renderMyVouchers(){
   const el=document.getElementById('my-vouchers-list');
-  const vList=(currentUser&&currentUser.vouchers)||[];
+  const vList=myVouchers;
   if(!vList.length){el.innerHTML='<div class="empty-state">Ակտիվ կտրոններ չունեք</div>';return;}
   el.innerHTML=vList.map(v=>`
     <div class="list-row" onclick="showVoucherById('${v.partnerId}')" style="cursor:pointer">
@@ -1161,29 +1192,42 @@ function renderMyVouchers(){
     </div>`).join('');
 }
 function showVoucherById(pid){
-  if(!currentUser) return;
-  const v=currentUser.vouchers.find(x=>x.partnerId===pid);const p=partners.find(x=>x.id===pid);
+  const v=myVouchers.find(x=>x.partnerId===pid);
+  const p=partners.find(x=>x.id===pid);
   if(v&&p){currentPartner=p;showVoucherScreen(v);}
 }
 // ═══════════════════════════════════════════════════════
 // ADMIN PANEL
 // ═══════════════════════════════════════════════════════
-function adminLogin(){
-  if(document.getElementById('adm-email').value===ADMIN_EMAIL&&document.getElementById('adm-pass').value===ADMIN_PASS){
-    renderAdminPanel();showScreen('s-admin');
-  } else alert('Աշխատակցի տվյալները սխալ են։');
+async function adminLogin(){
+  const email=document.getElementById('adm-email').value.trim();
+  const pw=document.getElementById('adm-pass').value;
+  if(email!==ADMIN_EMAIL){alert('Աշխատակցի տվյալները սխալ են։');return;}
+  const {data,error}=await db.rpc('admin_ok',{p_password:pw});
+  if(error){dbErr(error);return;}
+  if(data!==true){alert('Աշխատակցի տվյալները սխալ են։');return;}
+  adminPw=pw;
+  await renderAdminPanel();
+  showScreen('s-admin');
 }
-function updateAdminStats(){
-  const ar=document.getElementById('a-residents');if(ar)ar.textContent=residents.length;
-  const av=document.getElementById('a-vouchers');if(av)av.textContent=residents.reduce((sum,r)=>sum+((r.vouchers||[]).length),0);
-  const ap=document.getElementById('a-partners-count');if(ap)ap.textContent=partners.length;
+async function updateAdminStats(){
+  if(!adminPw) return;
+  const {data,error}=await db.rpc('admin_stats',{p_password:adminPw});
+  if(error||!data||!data.length) return;
+  const st=data[0];
+  const ar=document.getElementById('a-residents');if(ar)ar.textContent=st.residents;
+  const av=document.getElementById('a-vouchers');if(av)av.textContent=st.vouchers;
+  const ap=document.getElementById('a-partners-count');if(ap)ap.textContent=st.partners;
 }
-function renderAdminPanel(){
-  updateAdminStats();
+async function renderAdminPanel(){
+  await updateAdminStats();
+  const {data,error}=await db.rpc('admin_list_residents',{p_password:adminPw});
+  if(error){dbErr(error);return;}
+  adminResidents=(data||[]).map(mapResident);
   const tabs=document.getElementById('admin-tabs');
   const allTabs=['Բոլորը',...DISTRICTS];
-  tabs.innerHTML=allTabs.map((t,i)=>`<div class="a-tab${i===0?' active':''}" onclick="adminTab(this,'${t}')">${t} (${t==='Բոլորը'?residents.length:residents.filter(r=>r.district===t).length})</div>`).join('');
-  renderAdminResidents('Բոլոր');
+  tabs.innerHTML=allTabs.map((t,i)=>`<div class="a-tab${i===0?' active':''}" onclick="adminTab(this,'${t}')">${t} (${t==='Բոլորը'?adminResidents.length:adminResidents.filter(r=>r.district===t).length})</div>`).join('');
+  renderAdminResidents('Բոլորը');
 }
 function adminTab(el,tab){
   document.querySelectorAll('.a-tab').forEach(t=>t.classList.remove('active'));
@@ -1191,7 +1235,7 @@ function adminTab(el,tab){
   renderAdminResidents(tab);
 }
 function renderAdminResidents(filter){
-  const list=filter==='Բոլորը'?residents:residents.filter(r=>r.district===filter);
+  const list=filter==='Բոլորը'?adminResidents:adminResidents.filter(r=>r.district===filter);
   const c=document.getElementById('admin-content');
   if(!list.length){c.innerHTML='<div class="empty-state">Բնակիչներ չեն գտնվել</div>';return;}
   c.innerHTML=`<div class="table-wrap"><table class="res-table">
@@ -1210,20 +1254,23 @@ function renderAdminResidents(filter){
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
-function openCustomerPage(id){
-  const r=residents.find(x=>x.id===id);if(!r) return;
-  renderCustomerPage(r.id);
+async function openCustomerPage(id){
+  const r=adminResidents.find(x=>x.id===id);if(!r) return;
+  const {data,error}=await db.rpc('admin_list_vouchers',{p_password:adminPw,p_resident:id});
+  if(error){dbErr(error);return;}
+  currentCustomer={resident:r,vouchers:(data||[]).map(mapVoucher)};
+  renderCustomerPage();
   showScreen('s-admin-customer');
 }
-function renderCustomerPage(id){
-  const r=residents.find(x=>x.id===id);if(!r) return;
+function renderCustomerPage(){
+  if(!currentCustomer) return;
+  const r=currentCustomer.resident, vList=currentCustomer.vouchers;
   document.getElementById('ac-avatar').textContent=(r.first[0]||'')+(r.last[0]||'');
   document.getElementById('ac-name').textContent=r.first+' '+r.last;
   document.getElementById('ac-phone').textContent='+374 '+r.phone;
   document.getElementById('ac-district').textContent=r.district;
   document.getElementById('ac-building-apt').textContent=r.building+' / '+r.apt;
   const list=document.getElementById('ac-vouchers-list');
-  const vList=r.vouchers||[];
   if(!vList.length){
     list.innerHTML='<div class="empty-state">Այս բնակիչը դեռևս պրոմո կոդ չի ստացել</div>';
     return;
@@ -1243,7 +1290,8 @@ function renderCustomerPage(id){
     </div>`;
   }).join('');
 }
-function showAdminPartnersScreen(){
+async function showAdminPartnersScreen(){
+  await loadPartners();
   showScreen('s-admin-partners');
   renderAdminPartners();
 }
@@ -1270,11 +1318,13 @@ function renderAdminPartners(){
       </div>
     </div>`).join('');
 }
-function togglePartnerActive(id,checkbox){
-  const p=partners.find(x=>x.id===id);if(!p) return;
-  p.active=checkbox.checked;
+async function togglePartnerActive(id,checkbox){
+  const {error}=await db.rpc('admin_set_partner_active',
+    {p_password:adminPw,p_id:id,p_active:checkbox.checked});
+  if(error){dbErr(error);checkbox.checked=!checkbox.checked;return;}
+  await loadPartners();
   renderAdminPartners();
-  updateAdminStats();
+  await updateAdminStats();
 }
 let editingPartnerId=null;
 let newPartnerLogo=null;
@@ -1329,51 +1379,38 @@ function clearPartnerLogo(){
   const fi=document.getElementById('partner-logo-input');if(fi)fi.value='';
   const prev=document.getElementById('partner-logo-preview');if(prev)prev.style.display='none';
 }
-function savePartner(){
+async function savePartner(){
   const name=document.getElementById('np-name').value.trim();
   if(!name){alert('Լրացնել անունը');return;}
-  const data={
-    name,cat:document.getElementById('np-cat').value,
-    icon:document.getElementById('np-icon').value||'🏢',
-    logo:newPartnerLogo,
-    discount:document.getElementById('np-discount').value||'Հատուկ առաջարկ',
-    desc:document.getElementById('np-desc').value||'',
-    terms:document.getElementById('np-terms').value||'',
-    how:document.getElementById('np-how').value||'Ցույց տվեք կոդը.'
-  };
-  if(editingPartnerId){
-    const p=partners.find(x=>x.id===editingPartnerId);
-    if(p) Object.assign(p,data);
-  } else {
-    partners.push(Object.assign({id:'p'+Date.now(),active:true},data));
-  }
+  const {error}=await db.rpc('admin_save_partner',{
+    p_password:adminPw,
+    p_id:editingPartnerId,
+    p_name:name,
+    p_category:document.getElementById('np-cat').value,
+    p_logo:newPartnerLogo,
+    p_icon:document.getElementById('np-icon').value||'🏢',
+    p_discount:document.getElementById('np-discount').value||'Հատուկ առաջարկ',
+    p_description:document.getElementById('np-desc').value||'',
+    p_terms:document.getElementById('np-terms').value||'',
+    p_how_to:document.getElementById('np-how').value||'Ցույց տվեք կոդը.'
+  });
+  if(error){dbErr(error);return;}
   closeModal('modal-partner');clearPartnerLogo();editingPartnerId=null;
-  updateAdminStats();
-  showAdminPartnersScreen();
+  await showAdminPartnersScreen();
 }
 function exportXLSX(){
-  // CSV export (real XLSX needs a library)
   const rows=[['Անուն','Ազգանուն','Հեռախոսահամար','Թաղամաս','Մասնաշենք','Բնակարան','Ամսաթիվ']];
-  residents.forEach(r=>rows.push([r.first,r.last,'+374 '+r.phone,r.district,r.building,r.apt,r.date]));
-  const csv=rows.map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  adminResidents.forEach(r=>rows.push([r.first,r.last,'+374 '+r.phone,r.district,r.building,r.apt,r.date]));
+  const csv=rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
   a.download='zover_residents_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
-// --- DEMO DATA - delete this block for production ---
-partners=[
- {id:'p1',name:'VEGA',cat:'tech',icon:'📺',logo:null,active:true,discount:'10% զեղչ',desc:'Կենցաղային տեխնիկա և էլեկտրոնիկա։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը գանձապահին։'},
- {id:'p2',name:'Studio 47',cat:'design',icon:'🎨',logo:null,active:true,discount:'15% զեղչ',desc:'Ինտերիերի դիզայն և հեղինակային հսկողություն։',terms:'Գործում է մինչև 31.12.2026',how:'Նշեք կոդը խորհրդատվության պատվերի ժամանակ։'},
- {id:'p3',name:'BuildMax',cat:'material',icon:'🧱',logo:null,active:true,discount:'12% զեղչ',desc:'Շինանյութ և վերանորոգման փաթեթներ։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը պատվերը ձևակերպելիս։'},
- {id:'p4',name:'Loom Home',cat:'furniture',icon:'🛋',logo:null,active:true,discount:'20% զեղչ',desc:'Կահույք՝ չափման և տեղադրման ծառայությամբ։',terms:'Գործում է մինչև 31.12.2026',how:'Ցույց տվեք կոդը սրահում։'},
-];
-// --- END DEMO DATA ---
 
 // INIT
-renderPartners('all');
-updateAdminStats();
+loadPartners().then(()=>renderPartners('all'));
 </script>
 </body>
 </html>
