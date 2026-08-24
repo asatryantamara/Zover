@@ -70,6 +70,8 @@ h3{font-size:1.4rem}
 .nav a:hover::after{width:100%}
 .header-actions{display:flex;align-items:center;gap:14px}
 .header-cta{padding:10px 20px;font-size:.88rem}
+.cta-short{display:none}   /* short label shows on mobile only */
+.nav-cta{display:none}     /* menu apartments button shows on mobile only */
 .lang-switch{
   display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);
   border:1px solid var(--line);color:var(--white);border-radius:100px;
@@ -249,7 +251,7 @@ html[lang="hy"] .eyebrow{letter-spacing:.12em}
 }
 @media (max-width:760px){
   .nav{position:fixed;inset:74px 0 auto 0;flex-direction:column;gap:0;
-    background:rgba(28,28,32,.98);backdrop-filter:blur(12px);
+    background:var(--raisin-2);
     border-bottom:1px solid var(--line);padding:8px 0;
     transform:translateY(-120%);transition:transform .35s var(--ease);z-index:40;margin:0}
   .nav.open{transform:translateY(0)}
@@ -267,7 +269,18 @@ html[lang="hy"] .eyebrow{letter-spacing:.12em}
   .hero-stats{gap:30px}
   .hero-stats strong{font-size:1.7rem}
   .section{padding:80px 0}
-  .header-cta{display:none}
+  /* Compact "Apartments" CTA stays visible in the mobile top bar */
+  .header-cta{padding:9px 15px;font-size:.76rem}
+  .cta-full{display:none}
+  .cta-short{display:inline}
+  .header-inner{gap:10px}
+  .site-header .container{padding:0 20px}
+  /* Highlighted apartments button inside the open menu */
+  .nav a.nav-cta{display:block;margin:12px 20px 6px;padding:14px 18px;text-align:center;
+    background:var(--honey);color:var(--raisin);border-radius:100px;
+    font-weight:700;font-size:.95rem;border-bottom:0}
+  /* Solid header while the menu is open -> single clean divider, no stripes */
+  .site-header:has(.menu-toggle.open){background:var(--raisin-2);border-bottom-color:var(--line)}
   .partner{flex-wrap:wrap}
 }
 @media (max-width:480px){
