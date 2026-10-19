@@ -43,13 +43,16 @@ module.exports = async function handler(req, res) {
       headers: { 'X-Dexatel-Key': apiKey },
     });
 
+    const rawText = await r.text().catch(() => '');
     if (!r.ok) {
-      const raw = await r.text().catch(() => '');
-      console.error('[verify-otp] Dexatel error', r.status, raw); // server-side only
-      return res.status(200).json({ valid: false });
+      console.error('[verify-otp] Dexatel error', r.status, rawText); // server-side only
+      const b = { valid: false };
+      if (req.query && req.query.debug === '1') { b._status = r.status; b._raw = rawText; } // TEMP
+      return res.status(200).json(b);
     }
 
-    const json = await r.json().catch(() => ({}));
+    let json = {};
+    try { json = JSON.parse(rawText); } catch (e) {}
     const list = Array.isArray(json.data) ? json.data : [];
     const now = Date.now();
 
@@ -61,7 +64,9 @@ module.exports = async function handler(req, res) {
         (!v.expire_date || new Date(v.expire_date).getTime() > now)
     );
 
-    return res.status(200).json({ valid });
+    const b = { valid };
+    if (req.query && req.query.debug === '1') { b._raw = rawText; b._fullPhone = fullPhone; b._count = list.length; } // TEMP
+    return res.status(200).json(b);
   } catch (err) {
     console.error('[verify-otp] Request failed', err); // server-side only
     return res.status(200).json({ valid: false });
