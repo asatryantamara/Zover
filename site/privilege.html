@@ -79,8 +79,8 @@ select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+x
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .divider span{font-size:12px;color:var(--text3)}
 /* OTP */
-.otp-row{display:flex;gap:10px;justify-content:center;margin:10px 0 16px}
-.otp-box{width:52px;height:56px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:22px;font-weight:600;text-align:center;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.otp-row{display:flex;gap:8px;justify-content:center;margin:10px 0 16px}
+.otp-box{width:44px;height:52px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:20px;font-weight:600;text-align:center;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
 .otp-box:focus{border-color:var(--accent)}
 .otp-box.filled{border-color:var(--accent);background:var(--light)}
 /* PASSWORD STRENGTH */
@@ -866,6 +866,23 @@ function buildOTP(containerId, count=4){
 function getOTP(containerId){
   return Array.from(document.getElementById(containerId).children).map(i=>i.value).join('');
 }
+// Real SMS OTP via our serverless functions (Dexatel). raw = 8 digits.
+async function sendOtp(raw){
+  try{
+    const resp=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:raw})});
+    const j=await resp.json().catch(()=>({}));
+    if(resp.status===429){alert('Չափազանց շատ փորձեր։ Խնդրում ենք փորձել մեկ ժամ անց։');return false;}
+    if(!resp.ok||!j.ok){alert('Չհաջողվեց ուղարկել կոդը։ Խնդրում ենք փորձել կրկին։');return false;}
+    return true;
+  }catch(e){console.error(e);alert('Կապի սխալ։ Խնդրում ենք փորձել կրկին։');return false;}
+}
+async function verifyOtp(raw,code){
+  try{
+    const resp=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:raw,code})});
+    const j=await resp.json().catch(()=>({}));
+    return j.valid===true;
+  }catch(e){console.error(e);return false;}
+}
 // ═══════════════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════════════
@@ -933,19 +950,20 @@ async function doLogin(){
 // ═══════════════════════════════════════════════════════
 let fpPhone='';
 function openForgot(){openModal('modal-forgot');}
-function fpSendCode(){
+async function fpSendCode(){
   const raw=document.getElementById('fp-phone').value.replace(/\D/g,'');
   if(!validateArmPhone(raw)){alert('Հեռախոսահամարը սխալ է։');return;}
   fpPhone=raw;
+  if(!(await sendOtp(raw))) return;
   document.getElementById('fp-hint').textContent='Կոդը ուղարկվել է +374 '+raw+' համարին';
-  buildOTP('fp-otp-row',4);
+  buildOTP('fp-otp-row',6);
   document.getElementById('forgot-step-1').style.display='none';
   document.getElementById('forgot-step-2').style.display='block';
 }
-function fpVerify(){
+async function fpVerify(){
   const otp=getOTP('fp-otp-row');
-  if(otp.length<4){alert('Սխալ կոդ։');return;}
-  // Demo: any 4-digit code works
+  if(otp.length<6){alert('Սխալ կոդ։');return;}
+  if(!(await verifyOtp(fpPhone,otp))){alert('Սխալ կամ ժամկետանց կոդ։');return;}
   document.getElementById('forgot-step-2').style.display='none';
   document.getElementById('forgot-step-3').style.display='block';
   checkPwReqs('fp-pw1','fp-reqs');
@@ -1050,18 +1068,20 @@ async function regSendCode(){
   const {data:taken,error}=await db.rpc('phone_exists',{p_phone:raw});
   if(error){dbErr(error);return;}
   if(taken===true){alert('Գրանցված հեռախոսահամար');return;}
+  if(!(await sendOtp(raw))) return;
   pendingRegistration={first,last,phone:raw,pw,district:dist,building:bld,apt,
     contractFile:uploadedFileName||null};
   document.getElementById('reg-otp-hint').textContent='Կոդը ուղարկվել է +374 '+raw+' համարին';
-  buildOTP('reg-otp-row',4);
+  buildOTP('reg-otp-row',6);
   document.getElementById('register-step-1').style.display='none';
   document.getElementById('register-step-2').style.display='block';
 }
 async function regVerifyCode(){
   const otp=getOTP('reg-otp-row');
-  if(otp.length<4){alert('Սխալ կոդ։');return;}
+  if(otp.length<6){alert('Սխալ կոդ։');return;}
   if(!pendingRegistration) return;
   const r=pendingRegistration;
+  if(!(await verifyOtp(r.phone,otp))){alert('Սխալ կամ ժամկետանց կոդ։');return;}
   const {data,error}=await db.rpc('register_resident',{
     p_first:r.first,p_last:r.last,p_phone:r.phone,p_password:r.pw,
     p_district:r.district,p_building:r.building,p_apt:r.apt,p_contract_url:r.contractFile

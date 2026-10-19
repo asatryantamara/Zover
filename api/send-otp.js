@@ -67,16 +67,12 @@ module.exports = async function handler(req, res) {
     if (!r.ok) {
       const raw = await r.text().catch(() => '');
       console.error('[send-otp] Dexatel error', r.status, raw); // server-side only
-      const body = { ok: false, error: 'Could not send code' };
-      if (req.query && req.query.debug === '1') { body._status = r.status; body._raw = raw; } // TEMP diagnostic
-      return res.status(502).json(body);
+      return res.status(502).json({ ok: false, error: 'Could not send code' });
     }
 
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('[send-otp] Request failed', err); // server-side only
-    const body = { ok: false, error: 'Could not send code' };
-    if (req.query && req.query.debug === '1') { body._exception = String(err); } // TEMP diagnostic
-    return res.status(502).json(body);
+    return res.status(502).json({ ok: false, error: 'Could not send code' });
   }
 };

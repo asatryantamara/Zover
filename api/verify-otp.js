@@ -2,6 +2,21 @@
 // Asks Dexatel whether the code matches a live verification for this +374 number.
 // Secrets come from env only; Dexatel's raw errors are logged, never returned.
 
+// Best-effort in-memory brute-force limit: max 10 verify attempts / phone / 15 min.
+// NOTE: per-instance only (serverless). Dexatel codes also expire (~2h) and are
+// 6 digits, so this mainly slows automated guessing.
+const ATTEMPTS = new Map(); // fullPhone -> [timestamps]
+const WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 10;
+
+function tooManyAttempts(key) {
+  const now = Date.now();
+  const hits = (ATTEMPTS.get(key) || []).filter((t) => now - t < WINDOW_MS);
+  hits.push(now);
+  ATTEMPTS.set(key, hits);
+  return hits.length > MAX_ATTEMPTS;
+}
+
 function readBody(req) {
   let b = req.body;
   if (typeof b === 'string') {
@@ -25,6 +40,11 @@ module.exports = async function handler(req, res) {
   if (!/^\d{4,8}$/.test(otp)) return res.status(400).json({ valid: false });
   const fullPhone = '+374' + local;
 
+  // Throttle guessing.
+  if (tooManyAttempts(fullPhone)) {
+    return res.status(429).json({ valid: false });
+  }
+
   const apiKey = process.env.DEXATEL_API_KEY;
   if (!apiKey) {
     console.error('[verify-otp] Missing DEXATEL_API_KEY env var');
@@ -32,8 +52,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Query by code only; match the phone ourselves (Dexatel may store the
-    // number in a different format than the "+374…" we send).
+    // Query by code only; match the phone ourselves (Dexatel stores the number
+    // without the "+", e.g. "37499557400", not "+37499557400").
     const url =
       'https://api.dexatel.com/v1/verifications?code=' + encodeURIComponent(otp);
 
@@ -42,22 +62,19 @@ module.exports = async function handler(req, res) {
       headers: { 'X-Dexatel-Key': apiKey },
     });
 
-    const rawText = await r.text().catch(() => '');
     if (!r.ok) {
-      console.error('[verify-otp] Dexatel error', r.status, rawText); // server-side only
-      const b = { valid: false };
-      if (req.query && req.query.debug === '1') { b._status = r.status; b._raw = rawText; } // TEMP
-      return res.status(200).json(b);
+      const raw = await r.text().catch(() => '');
+      console.error('[verify-otp] Dexatel error', r.status, raw); // server-side only
+      return res.status(200).json({ valid: false });
     }
 
-    let json = {};
-    try { json = JSON.parse(rawText); } catch (e) {}
+    const json = await r.json().catch(() => ({}));
     const list = Array.isArray(json.data) ? json.data : [];
     const now = Date.now();
     const wantDigits = fullPhone.replace(/\D/g, ''); // e.g. 37499557400
 
-    // Valid = a record whose phone matches (compared as digits only, allowing
-    // for +374 / 374 / local forms) and that hasn't expired.
+    // Valid = a record whose phone matches (digits only, tolerant of +374 / 374
+    // / local forms) and that hasn't expired.
     const valid = list.some((v) => {
       if (!v) return false;
       const got = String(v.phone || '').replace(/\D/g, '');
@@ -68,9 +85,7 @@ module.exports = async function handler(req, res) {
       return phoneMatch && notExpired;
     });
 
-    const b = { valid };
-    if (req.query && req.query.debug === '1') { b._raw = rawText; b._fullPhone = fullPhone; b._count = list.length; } // TEMP
-    return res.status(200).json(b);
+    return res.status(200).json({ valid });
   } catch (err) {
     console.error('[verify-otp] Request failed', err); // server-side only
     return res.status(200).json({ valid: false });
