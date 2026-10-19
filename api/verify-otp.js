@@ -32,11 +32,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Query by code only; match the phone ourselves (Dexatel may store the
+    // number in a different format than the "+374…" we send).
     const url =
-      'https://api.dexatel.com/v1/verifications?code=' +
-      encodeURIComponent(otp) +
-      '&phone=' +
-      encodeURIComponent(fullPhone);
+      'https://api.dexatel.com/v1/verifications?code=' + encodeURIComponent(otp);
 
     const r = await fetch(url, {
       method: 'GET',
@@ -55,14 +54,19 @@ module.exports = async function handler(req, res) {
     try { json = JSON.parse(rawText); } catch (e) {}
     const list = Array.isArray(json.data) ? json.data : [];
     const now = Date.now();
+    const wantDigits = fullPhone.replace(/\D/g, ''); // e.g. 37499557400
 
-    // Valid = a record for this exact phone that hasn't expired.
-    const valid = list.some(
-      (v) =>
-        v &&
-        v.phone === fullPhone &&
-        (!v.expire_date || new Date(v.expire_date).getTime() > now)
-    );
+    // Valid = a record whose phone matches (compared as digits only, allowing
+    // for +374 / 374 / local forms) and that hasn't expired.
+    const valid = list.some((v) => {
+      if (!v) return false;
+      const got = String(v.phone || '').replace(/\D/g, '');
+      const phoneMatch =
+        got === wantDigits || got.endsWith(local) || wantDigits.endsWith(got);
+      const notExpired =
+        !v.expire_date || new Date(v.expire_date).getTime() > now;
+      return phoneMatch && notExpired;
+    });
 
     const b = { valid };
     if (req.query && req.query.debug === '1') { b._raw = rawText; b._fullPhone = fullPhone; b._count = list.length; } // TEMP
